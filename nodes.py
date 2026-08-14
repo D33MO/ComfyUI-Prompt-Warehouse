@@ -19,8 +19,6 @@ class PromptWarehouse:
             "height": ("STRING", {"default": "", "placeholder": "未设置"}),
             "random_group": (["全部", *groups], {"default": "全部"}),
             "random_enabled": ("BOOLEAN", {"default": False, "label_on": "开启", "label_off": "关闭"}),
-            "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff,
-                             "control_after_generate": True}),
         }}
 
     RETURN_TYPES = ("STRING", "INT", "INT")
@@ -30,12 +28,12 @@ class PromptWarehouse:
     DESCRIPTION = "管理、选择或按分组随机抽取提示词及其可选尺寸。"
 
     @classmethod
-    def IS_CHANGED(cls, prompt, width, height, random_group, random_enabled, seed):
+    def IS_CHANGED(cls, prompt, width, height, random_group, random_enabled):
         if random_enabled:
-            return (seed, random_group, tuple(item["id"] for item in load_entries()))
+            return float("nan")
         return (prompt, width, height)
 
-    def build(self, prompt, width, height, random_group, random_enabled, seed):
+    def build(self, prompt, width, height, random_group, random_enabled):
         selected = None
         if random_enabled:
             entries = load_entries()
@@ -43,7 +41,7 @@ class PromptWarehouse:
             if group and group != "全部":
                 entries = [item for item in entries if item["group"] == group]
             if entries:
-                selected = random.Random(seed).choice(entries)
+                selected = random.choice(entries)
                 prompt, width, height = selected["prompt"], selected.get("width") or "", selected.get("height") or ""
         return {"ui": {"selected": [selected] if selected else []},
                 "result": (prompt, _dimension(width), _dimension(height))}
