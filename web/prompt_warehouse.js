@@ -77,7 +77,6 @@ async function openWarehouse(node) {
         <div class="pw-actions">
           <button class="pw-btn danger" data-delete disabled>删除</button>
           <div>
-            <button class="pw-btn" data-new>新增</button>
             <button class="pw-btn primary" data-save>保存仓库</button>
           </div>
         </div>
@@ -201,7 +200,6 @@ async function openWarehouse(node) {
     }
   };
 
-  query("[data-new]").onclick = beginNew;
   query("[data-save]").onclick = async () => {
     if (pendingDelete && editingId) {
       await persist(entries.filter((item) => item.id !== editingId), "提示词已删除。");
@@ -220,7 +218,7 @@ async function openWarehouse(node) {
     pendingDelete = true;
     disableDraft(true);
     query("[data-mode]").textContent = "待删除";
-    query("[data-status]").textContent = "尚未删除。点击“保存仓库”后生效，点击“新增”可取消。";
+    query("[data-status]").textContent = "尚未删除。点击“保存仓库”后生效；再次点击左侧铅笔可取消。";
   };
 
   const close = () => root.remove();
