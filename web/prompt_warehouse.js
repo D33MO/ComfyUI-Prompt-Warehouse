@@ -17,7 +17,7 @@ const css = `
 .pw-list{background:#10151c;border-right:1px solid #303846;padding:18px;overflow:auto}.pw-list h2{font-size:17px;margin:0 0 6px}.pw-list-note{font-size:12px;color:#7f8da0;margin:0 0 10px}.pw-filter{box-sizing:border-box;width:100%;margin:0 0 12px;padding:8px 9px;border:1px solid #344052;border-radius:7px;background:#171e28;color:#dce5f0;outline:none}.pw-filter:focus{border-color:#7aa2d8}
 .pw-entry{display:grid;grid-template-columns:1fr 34px;align-items:stretch;margin:3px 0;border:1px solid transparent;border-radius:8px;overflow:hidden}.pw-entry:hover,.pw-entry.active{background:#202936;border-color:#394657}.pw-entry-main,.pw-edit{border:0;background:transparent;color:#dfe7f2;cursor:pointer}.pw-entry-main{text-align:left;padding:9px 10px}.pw-entry-main small{display:block;color:#8795a8;margin-top:3px}.pw-edit{font-size:16px;color:#9fb0c4}.pw-edit:hover{background:#304055;color:#fff}
 .pw-editor{padding:22px 26px;overflow:auto}.pw-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.pw-head strong{font-size:18px}.pw-mode{display:inline-block;margin-left:8px;padding:3px 7px;border-radius:99px;background:#263448;color:#a9c6e8;font-size:11px;vertical-align:2px}
-.pw-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.pw-field{display:grid;gap:6px}.pw-field.full{grid-column:1/-1}.pw-field label{font-size:12px;color:#9aa8ba}.pw-field input,.pw-field textarea{box-sizing:border-box;width:100%;border:1px solid #3a4555;border-radius:8px;background:#0f141b;color:#edf3fa;padding:10px 11px;outline:none}.pw-field textarea{min-height:230px;resize:vertical}.pw-field input:focus,.pw-field textarea:focus{border-color:#7aa2d8;box-shadow:0 0 0 3px #527db32b}
+.pw-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.pw-field{display:grid;gap:6px}.pw-field.full{grid-column:1/-1}.pw-field label{font-size:12px;color:#9aa8ba}.pw-field input,.pw-field textarea{box-sizing:border-box;width:100%;border:1px solid #3a4555;border-radius:8px;background:#0f141b;color:#edf3fa;padding:10px 11px;outline:none}.pw-field textarea{min-height:230px;resize:vertical}.pw-field input:focus,.pw-field textarea:focus{border-color:#7aa2d8;box-shadow:0 0 0 3px #527db32b}.pw-combobox{position:relative}.pw-combobox input{padding-right:38px}.pw-combo-toggle{position:absolute;right:1px;top:1px;width:36px;height:calc(100% - 2px);border:0;background:transparent;color:#a9b6c8;cursor:pointer}.pw-combo-toggle:hover{color:#fff}.pw-group-menu{position:absolute;z-index:4;left:0;right:0;top:calc(100% + 5px);max-height:190px;overflow:auto;padding:5px;background:#171e28;border:1px solid #3a4658;border-radius:8px;box-shadow:0 12px 30px #0008}.pw-group-menu[hidden]{display:none}.pw-group-option{display:block;width:100%;padding:9px 10px;border:0;border-radius:6px;background:transparent;color:#dfe7f2;text-align:left;cursor:pointer}.pw-group-option:hover,.pw-group-option:focus{background:#293647;color:#fff;outline:none}.pw-group-empty{padding:9px 10px;color:#7f8da0;font-size:12px}
 .pw-actions{display:flex;justify-content:space-between;gap:10px;margin-top:20px}.pw-actions div{display:flex;gap:9px}.pw-btn{border:1px solid #3d495a;border-radius:8px;background:#222b37;color:#eaf0f7;padding:9px 14px;cursor:pointer}.pw-btn:hover{background:#2b3746}.pw-btn.primary{background:#4778ad;border-color:#5c8dc2}.pw-btn.danger{color:#ffb8b2}.pw-btn[disabled]{opacity:.4;cursor:not-allowed}.pw-empty{color:#8795a8;padding:12px 8px}.pw-status{font-size:12px;color:#93a3b7;margin-top:10px;min-height:18px}
 @media(max-width:720px){.pw-modal{grid-template-columns:1fr;height:94vh}.pw-list{max-height:210px;border-right:0;border-bottom:1px solid #303846}.pw-grid{grid-template-columns:1fr}}
 `;
@@ -70,7 +70,7 @@ async function openWarehouse(node) {
         </div>
         <div class="pw-grid">
           <div class="pw-field"><label>标题</label><input data-title placeholder="例如：雨夜街景"></div>
-          <div class="pw-field"><label>分组</label><input data-group list="pw-group-options" placeholder="选择或输入新分组"><datalist id="pw-group-options" data-groups></datalist></div>
+          <div class="pw-field"><label>分组</label><div class="pw-combobox" data-group-combo><input data-group role="combobox" aria-expanded="false" autocomplete="off" placeholder="选择或输入新分组"><button class="pw-combo-toggle" data-group-toggle type="button" tabindex="-1" aria-label="显示已有分组">▼</button><div class="pw-group-menu" data-groups role="listbox" hidden></div></div></div>
           <div class="pw-field full"><label>提示词</label><textarea data-prompt placeholder="输入完整提示词…"></textarea></div>
           <div class="pw-field"><label>Width（可选）</label><input data-width type="number" min="1" placeholder="未设置"></div>
           <div class="pw-field"><label>Height（可选）</label><input data-height type="number" min="1" placeholder="未设置"></div>
@@ -108,7 +108,11 @@ async function openWarehouse(node) {
 
   function renderGroups() {
     const groups = [...new Set(entries.map((entry) => entry.group).filter(Boolean))].sort();
-    query("[data-groups]").innerHTML = groups.map((group) => `<option value="${escapeHtml(group)}"></option>`).join("");
+    const search = query("[data-group]").value.trim().toLocaleLowerCase();
+    const matchingGroups = groups.filter((group) => !search || group.toLocaleLowerCase().includes(search));
+    query("[data-groups]").innerHTML = matchingGroups.length
+      ? matchingGroups.map((group) => `<button class="pw-group-option" type="button" role="option" data-group-option="${escapeHtml(group)}">${escapeHtml(group)}</button>`).join("")
+      : `<div class="pw-group-empty">没有匹配分组，保存后将自动新增</div>`;
     if (filterGroup !== "全部分组" && !groups.includes(filterGroup)) filterGroup = "全部分组";
     query("[data-filter]").innerHTML = ["全部分组", ...groups]
       .map((group) => `<option value="${escapeHtml(group)}" ${group === filterGroup ? "selected" : ""}>${escapeHtml(group)}</option>`)
@@ -213,6 +217,29 @@ async function openWarehouse(node) {
     filterGroup = event.target.value;
     renderList();
   };
+
+  function setGroupMenu(open) {
+    query("[data-groups]").hidden = !open;
+    query("[data-group]").setAttribute("aria-expanded", String(open));
+    if (open) renderGroups();
+  }
+
+  query("[data-group]").onfocus = () => setGroupMenu(true);
+  query("[data-group]").oninput = () => setGroupMenu(true);
+  query("[data-group]").onkeydown = (event) => {
+    if (event.key === "Escape") setGroupMenu(false);
+  };
+  query("[data-group-toggle]").onclick = () => setGroupMenu(query("[data-groups]").hidden);
+  query("[data-groups]").onclick = (event) => {
+    const option = event.target.closest("[data-group-option]");
+    if (!option) return;
+    query("[data-group]").value = option.dataset.groupOption;
+    query("[data-group]").focus();
+    setGroupMenu(false);
+  };
+  root.addEventListener("pointerdown", (event) => {
+    if (!event.target.closest("[data-group-combo]")) setGroupMenu(false);
+  });
 
   query("[data-save]").onclick = async () => {
     if (pendingDelete && editingId) {
