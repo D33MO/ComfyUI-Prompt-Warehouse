@@ -50,7 +50,6 @@ async function openWarehouse(node) {
   const data = await response.json();
   let entries = data.entries || [];
   let editingId = null;
-  let pendingDelete = false;
   let filterGroup = "全部分组";
 
   const root = document.createElement("div");
@@ -102,10 +101,6 @@ async function openWarehouse(node) {
     for (const field of fields) query(`[data-${field}]`).value = draft[field] ?? "";
   }
 
-  function disableDraft(disabled) {
-    for (const field of fields) query(`[data-${field}]`).disabled = disabled;
-  }
-
   function renderGroups() {
     const groups = [...new Set(entries.map((entry) => entry.group).filter(Boolean))].sort();
     const search = query("[data-group]").value.trim().toLocaleLowerCase();
@@ -135,8 +130,6 @@ async function openWarehouse(node) {
 
   function beginNew() {
     editingId = null;
-    pendingDelete = false;
-    disableDraft(false);
     writeDraft(EMPTY_DRAFT());
     query("[data-editor-title]").textContent = "新增提示词";
     query("[data-mode]").textContent = "草稿";
@@ -148,8 +141,6 @@ async function openWarehouse(node) {
 
   function beginEdit(entry) {
     editingId = entry.id;
-    pendingDelete = false;
-    disableDraft(false);
     writeDraft({ ...entry });
     query("[data-editor-title]").textContent = "编辑提示词";
     query("[data-mode]").textContent = "未保存";
@@ -242,24 +233,17 @@ async function openWarehouse(node) {
   });
 
   query("[data-save]").onclick = async () => {
-    if (pendingDelete && editingId) {
-      await persist(entries.filter((item) => item.id !== editingId), "提示词已删除。");
-      return;
-    }
     const draft = readDraft();
     const nextEntries = editingId
       ? entries.map((entry) => entry.id === editingId ? draft : entry)
       : [...entries, draft];
     await persist(nextEntries, editingId ? "修改已保存。" : "新提示词已保存。");
   };
-  query("[data-delete]").onclick = () => {
+  query("[data-delete]").onclick = async () => {
     if (!editingId) return;
     const entry = entries.find((item) => item.id === editingId);
     if (!entry || !confirm(`删除“${entry.title}”？`)) return;
-    pendingDelete = true;
-    disableDraft(true);
-    query("[data-mode]").textContent = "待删除";
-    query("[data-status]").textContent = "尚未删除。点击“保存仓库”后生效；再次点击左侧铅笔可取消。";
+    await persist(entries.filter((item) => item.id !== editingId), "提示词已删除。");
   };
 
   const close = () => root.remove();
