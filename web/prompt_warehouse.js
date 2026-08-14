@@ -14,7 +14,7 @@ const EMPTY_DRAFT = () => ({
 const css = `
 .pw-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(8,12,18,.72);display:grid;place-items:center;padding:24px;font-family:Inter,system-ui,sans-serif}
 .pw-modal{width:min(980px,96vw);height:min(720px,92vh);display:grid;grid-template-columns:300px 1fr;background:#151a22;color:#e8edf5;border:1px solid #343d4c;border-radius:14px;box-shadow:0 30px 90px #000a;overflow:hidden}
-.pw-list{background:#10151c;border-right:1px solid #303846;padding:18px;overflow:auto}.pw-list h2{font-size:17px;margin:0 0 6px}.pw-list-note{font-size:12px;color:#7f8da0;margin:0 0 14px}
+.pw-list{background:#10151c;border-right:1px solid #303846;padding:18px;overflow:auto}.pw-list h2{font-size:17px;margin:0 0 6px}.pw-list-note{font-size:12px;color:#7f8da0;margin:0 0 10px}.pw-filter{box-sizing:border-box;width:100%;margin:0 0 12px;padding:8px 9px;border:1px solid #344052;border-radius:7px;background:#171e28;color:#dce5f0;outline:none}.pw-filter:focus{border-color:#7aa2d8}
 .pw-entry{display:grid;grid-template-columns:1fr 34px;align-items:stretch;margin:3px 0;border:1px solid transparent;border-radius:8px;overflow:hidden}.pw-entry:hover,.pw-entry.active{background:#202936;border-color:#394657}.pw-entry-main,.pw-edit{border:0;background:transparent;color:#dfe7f2;cursor:pointer}.pw-entry-main{text-align:left;padding:9px 10px}.pw-entry-main small{display:block;color:#8795a8;margin-top:3px}.pw-edit{font-size:16px;color:#9fb0c4}.pw-edit:hover{background:#304055;color:#fff}
 .pw-editor{padding:22px 26px;overflow:auto}.pw-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.pw-head strong{font-size:18px}.pw-mode{display:inline-block;margin-left:8px;padding:3px 7px;border-radius:99px;background:#263448;color:#a9c6e8;font-size:11px;vertical-align:2px}
 .pw-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.pw-field{display:grid;gap:6px}.pw-field.full{grid-column:1/-1}.pw-field label{font-size:12px;color:#9aa8ba}.pw-field input,.pw-field textarea{box-sizing:border-box;width:100%;border:1px solid #3a4555;border-radius:8px;background:#0f141b;color:#edf3fa;padding:10px 11px;outline:none}.pw-field textarea{min-height:230px;resize:vertical}.pw-field input:focus,.pw-field textarea:focus{border-color:#7aa2d8;box-shadow:0 0 0 3px #527db32b}
@@ -51,6 +51,7 @@ async function openWarehouse(node) {
   let entries = data.entries || [];
   let editingId = null;
   let pendingDelete = false;
+  let filterGroup = "全部分组";
 
   const root = document.createElement("div");
   root.className = "pw-backdrop";
@@ -59,6 +60,7 @@ async function openWarehouse(node) {
       <aside class="pw-list">
         <h2>提示词仓库</h2>
         <p class="pw-list-note">点击标题载入节点，点击铅笔编辑</p>
+        <select class="pw-filter" data-filter aria-label="按分组筛选"></select>
         <div data-list></div>
       </aside>
       <main class="pw-editor">
@@ -107,17 +109,24 @@ async function openWarehouse(node) {
   function renderGroups() {
     const groups = [...new Set(entries.map((entry) => entry.group).filter(Boolean))].sort();
     query("[data-groups]").innerHTML = groups.map((group) => `<option value="${escapeHtml(group)}"></option>`).join("");
+    if (filterGroup !== "全部分组" && !groups.includes(filterGroup)) filterGroup = "全部分组";
+    query("[data-filter]").innerHTML = ["全部分组", ...groups]
+      .map((group) => `<option value="${escapeHtml(group)}" ${group === filterGroup ? "selected" : ""}>${escapeHtml(group)}</option>`)
+      .join("");
   }
 
   function renderList() {
-    query("[data-list]").innerHTML = entries.length
-      ? entries.map((entry) => `
+    renderGroups();
+    const visibleEntries = filterGroup === "全部分组"
+      ? entries
+      : entries.filter((entry) => entry.group === filterGroup);
+    query("[data-list]").innerHTML = visibleEntries.length
+      ? visibleEntries.map((entry) => `
           <div class="pw-entry ${entry.id === editingId ? "active" : ""}">
             <button class="pw-entry-main" data-use-id="${escapeHtml(entry.id)}">${escapeHtml(entry.title)}<small>${escapeHtml(entry.group)}</small></button>
             <button class="pw-edit" data-edit-id="${escapeHtml(entry.id)}" aria-label="编辑 ${escapeHtml(entry.title)}" title="编辑">✎</button>
           </div>`).join("")
-      : `<div class="pw-empty">还没有已保存的提示词。</div>`;
-    renderGroups();
+      : `<div class="pw-empty">该分组还没有已保存的提示词。</div>`;
   }
 
   function beginNew() {
@@ -198,6 +207,11 @@ async function openWarehouse(node) {
       const entry = entries.find((item) => item.id === useButton.dataset.useId);
       if (entry) loadIntoNode(entry);
     }
+  };
+
+  query("[data-filter]").onchange = (event) => {
+    filterGroup = event.target.value;
+    renderList();
   };
 
   query("[data-save]").onclick = async () => {
