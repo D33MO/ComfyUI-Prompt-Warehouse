@@ -22,6 +22,7 @@
 - 通过左侧 `prompt_in` 接口拼接上游提示词
 - 输出 `prompt`、`width`、`height`
 - 数据持久化保存在插件目录的 `data/prompts.json`
+- 实际仓库数据不受 Git 管理，更新插件不会覆盖该文件
 
 ## 安装
 
@@ -67,3 +68,9 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 如果 `CLIP Text Encode` 的 `text` 仍显示为输入框，请右键该输入框并选择 **Convert widget to input**。
 
 未填写 Width 或 Height 时，对应输出为 `0`，可由下游节点决定默认尺寸。
+
+## 数据与备份
+
+提示词保存在 `data/prompts.json`。该文件已加入 `.gitignore`，不会进入 Git 提交；仓库中的 `data/prompts.example.json` 仅用于展示数据格式。
+
+升级插件时，常规 `git pull` 不会覆盖实际提示词。删除或重新安装整个插件目录前，请单独备份 `data/prompts.json`。
