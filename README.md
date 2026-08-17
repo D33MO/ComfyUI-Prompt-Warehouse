@@ -1,6 +1,6 @@
 # ComfyUI Prompt Warehouse
 
-当前版本：`v0.1.0`
+当前版本：`v0.1.1`
 
 一个用于整理、复用和随机抽取提示词的 ComfyUI 自定义节点。每条仓库记录包含标题、分组、多行提示词，以及可选的 Width / Height。
 
