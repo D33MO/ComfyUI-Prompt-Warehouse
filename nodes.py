@@ -76,16 +76,19 @@ class PromptLine:
                     "placeholder": "输入提示词…",
                 }),
             },
+            "optional": {
+                "prompt_in": ("STRING", {"forceInput": True}),
+            },
         }
 
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("prompt",)
     FUNCTION = "output"
     CATEGORY = "Prompt Warehouse"
-    DESCRIPTION = "在单行输入框中输入提示词并原样输出。"
+    DESCRIPTION = "将上游提示词与单行输入框中的提示词拼接后输出。"
 
-    def output(self, prompt):
-        return (prompt,)
+    def output(self, prompt, prompt_in=""):
+        return (_join_prompts(prompt_in, prompt),)
 
 
 NODE_CLASS_MAPPINGS = {

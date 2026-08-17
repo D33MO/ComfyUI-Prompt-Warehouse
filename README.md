@@ -42,7 +42,7 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 
 在节点菜单的 `Prompt Warehouse` 分类中添加 **Prompt Warehouse / 提示词仓库**。
 
-如需一个简单的单行提示词输入节点，可在同一分类中添加 **Prompt Line / 单行提示词**，填写 `prompt` 后即可将其连接到其他字符串输入。
+如需一个简单的单行提示词节点，可在同一分类中添加 **Prompt Line / 单行提示词**。节点会将左侧 `prompt_in` 接口传入的上游提示词与内部单行 `prompt` 输入框内容用 `, ` 拼接后输出，且不会覆盖输入框内容。
 
 ### 管理仓库
 
