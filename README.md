@@ -22,9 +22,10 @@
 - 按指定分组或全部记录随机抽取
 - 随机抽取时，Prompt、Width 和 Height 保持配套
 - 通过左侧 `prompt_in` 接口拼接上游提示词
-- 输出 `prompt`、`width`、`height`
+- 可选接收 `clip` 输入，并输出 `prompt`、`width`、`height`、`conditioning`
 - 数据持久化保存在插件目录的 `data/prompts.json`
 - 实际仓库数据不受 Git 管理，更新插件不会覆盖该文件
+- 提供 `Prompt Line / 单行提示词` 节点，用单行输入框直接输出提示词
 
 ## 安装
 
@@ -40,6 +41,8 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 ## 使用
 
 在节点菜单的 `Prompt Warehouse` 分类中添加 **Prompt Warehouse / 提示词仓库**。
+
+如需一个简单的单行提示词输入节点，可在同一分类中添加 **Prompt Line / 单行提示词**，填写 `prompt` 后即可将其连接到其他字符串输入。
 
 ### 管理仓库
 
@@ -61,11 +64,17 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 
 将上游字符串连接到节点左侧的 `prompt_in`。节点会把上游提示词放在前面，将当前或随机抽取的提示词放在后面，并用 `, ` 自动拼接。
 
+Warehouse 节点输出非空提示词时，会默认在末尾补上一个英文逗号 `,`，方便继续拼接下游提示词。
+
 ### 连接 ComfyUI
 
 - `prompt` → `CLIP Text Encode.text`
 - `width` → `Empty Latent Image.width`
 - `height` → `Empty Latent Image.height`
+- `clip` ← 模型加载器的 `CLIP` 输出
+- `conditioning` → 采样器的正面或负面条件输入
+
+`clip` 不连接时不进行编码，原有的 `prompt`、`width` 和 `height` 输出仍可正常使用。
 
 如果 `CLIP Text Encode` 的 `text` 仍显示为输入框，请右键该输入框并选择 **Convert widget to input**。
 
