@@ -1,7 +1,7 @@
 import { app } from "../../scripts/app.js";
 
 const NODE_NAME = "PromptWarehouseMultiLoraLoader";
-const ROW_HEIGHT = 28;
+const ROW_HEIGHT = 23;
 
 function parseConfig(widget) {
   try {
@@ -26,7 +26,7 @@ function hideConfigWidget(widget) {
 
 function shortName(name, limit) {
   const value = String(name || "Select a LoRA…").replace(/\\/g, "/");
-  return value.length > limit ? `…${value.slice(1 - limit)}` : value;
+  return value.length > limit ? `${value.slice(0, Math.max(1, limit - 1))}…` : value;
 }
 
 function chooseLora(event, names, callback) {
@@ -67,7 +67,7 @@ function makeRowWidget(node, row, index, rows, names, save, rebuild) {
       ctx.fillStyle = LiteGraph.WIDGET_BGCOLOR || "#222";
       ctx.strokeStyle = LiteGraph.WIDGET_OUTLINE_COLOR || "#555";
       ctx.beginPath();
-      ctx.roundRect(10, y + 2, width - 20, height - 4, 6);
+      ctx.roundRect(10, y, width - 20, height - 1, 6);
       ctx.fill();
       ctx.stroke();
 
