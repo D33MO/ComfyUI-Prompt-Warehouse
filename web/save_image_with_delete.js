@@ -3,17 +3,33 @@ import { api } from "../../scripts/api.js";
 
 const NODE_NAME = "PromptWarehouseSaveImageWithDelete";
 
+function removeWidget(node, widget) {
+  if (!widget) return;
+  const index = node.widgets?.indexOf(widget) ?? -1;
+  if (index >= 0) node.widgets.splice(index, 1);
+}
+
 function hideInlineConfirm(node) {
   const confirmButton = node._pwConfirmDeleteButton;
   if (!confirmButton) return;
-  const index = node.widgets?.indexOf(confirmButton) ?? -1;
-  if (index >= 0) node.widgets.splice(index, 1);
+  removeWidget(node, confirmButton);
   node._pwConfirmDeleteButton = null;
   const count = node._pwSavedImages?.length || 0;
   if (node._pwDeleteButton) {
     node._pwDeleteButton.name = count ? `删除最近输出 (${count})` : "暂无可删除图片";
   }
   node.setDirtyCanvas(true, true);
+}
+
+function addDeleteButton(node) {
+  removeWidget(node, node._pwDeleteButton);
+  const count = node._pwSavedImages?.length || 0;
+  const button = node.addWidget("button", `删除最近输出 (${count})`, null, () => {
+    showInlineConfirm(node);
+  });
+  button.options = { ...(button.options || {}), serialize: false };
+  node._pwDeleteButton = button;
+  node.setSize([node.size[0], Math.max(node.size[1], node.computeSize()[1])]);
 }
 
 function showInlineConfirm(node) {
@@ -66,11 +82,8 @@ app.registerExtension({
     const created = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function () {
       const result = created?.apply(this, arguments);
-      const button = this.addWidget("button", "暂无可删除图片", null, () => {
-        showInlineConfirm(this);
-      });
-      button.options = { ...(button.options || {}), serialize: false };
-      this._pwDeleteButton = button;
+      this._pwDeleteButton = null;
+      this._pwConfirmDeleteButton = null;
       return result;
     };
 
@@ -78,11 +91,10 @@ app.registerExtension({
     nodeType.prototype.onExecuted = function (message) {
       const result = executed?.apply(this, arguments);
       hideInlineConfirm(this);
+      removeWidget(this, this._pwDeleteButton);
+      this._pwDeleteButton = null;
       this._pwSavedImages = (message?.images || []).filter((image) => image?.type === "output");
-      if (this._pwDeleteButton) {
-        const count = this._pwSavedImages.length;
-        this._pwDeleteButton.name = count ? `删除最近输出 (${count})` : "暂无可删除图片";
-      }
+      if (this._pwSavedImages.length) addDeleteButton(this);
       this.setDirtyCanvas(true, true);
       return result;
     };
