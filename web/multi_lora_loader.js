@@ -236,7 +236,7 @@ function renderEditor(node, names) {
   });
   button.options = { ...(button.options || {}), serialize: false };
   added.push(button);
-  node.setSize([Math.max(node.size[0], 360), Math.max(node.computeSize()[1], 105)]);
+  node.setSize([Math.max(node.size[0], 355), Math.max(node.computeSize()[1], 105)]);
   save();
 }
 
@@ -249,6 +249,7 @@ app.registerExtension({
     const created = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function () {
       const result = created?.apply(this, arguments);
+      this.size[0] = Math.max(355, (this.size?.[0] || 360) - 5);
       renderEditor(this, names);
       return result;
     };
