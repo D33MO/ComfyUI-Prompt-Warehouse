@@ -3,6 +3,58 @@ import { app } from "../../scripts/app.js";
 const NODE_NAME = "PromptWarehouseMultiLoraLoader";
 const ROW_HEIGHT = 23;
 
+function showStrengthEditor(initialValue, onSave) {
+  if (!document.getElementById("pw-lora-strength-style")) {
+    const style = document.createElement("style");
+    style.id = "pw-lora-strength-style";
+    style.textContent = `
+      .pw-lora-strength-backdrop{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;background:#05070a99;font-family:Inter,system-ui,sans-serif}
+      .pw-lora-strength-dialog{width:270px;padding:17px;background:#202226;color:#eceff4;border:1px solid #555b65;border-radius:10px;box-shadow:0 20px 60px #000a}
+      .pw-lora-strength-dialog label{display:block;margin-bottom:9px;color:#cdd2da;font-size:13px}
+      .pw-lora-strength-dialog input{box-sizing:border-box;width:100%;padding:9px 10px;background:#121417;color:#fff;border:1px solid #5c6470;border-radius:6px;outline:none;font-size:14px}
+      .pw-lora-strength-dialog input:focus{border-color:#8b9fbd;box-shadow:0 0 0 3px #7791b426}
+      .pw-lora-strength-error{min-height:17px;margin-top:5px;color:#ef8d8d;font-size:11px}
+      .pw-lora-strength-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+      .pw-lora-strength-actions button{padding:6px 13px;color:#e7eaf0;background:#343840;border:1px solid #555c67;border-radius:6px;cursor:pointer}
+      .pw-lora-strength-actions button[data-save]{background:#526f98;border-color:#6f89ad}
+    `;
+    document.head.append(style);
+  }
+
+  const root = document.createElement("div");
+  root.className = "pw-lora-strength-backdrop";
+  root.innerHTML = `
+    <div class="pw-lora-strength-dialog" role="dialog" aria-modal="true" aria-label="LoRA strength">
+      <label>LoRA Strength</label>
+      <input type="number" step="0.05" inputmode="decimal" value="${Number(initialValue)}">
+      <div class="pw-lora-strength-error"></div>
+      <div class="pw-lora-strength-actions"><button data-cancel>取消</button><button data-save>确定</button></div>
+    </div>`;
+  document.body.append(root);
+  const input = root.querySelector("input");
+  const error = root.querySelector(".pw-lora-strength-error");
+  const close = () => root.remove();
+  const save = () => {
+    const value = Number(input.value);
+    if (!input.value.trim() || !Number.isFinite(value)) {
+      error.textContent = "请输入有效数字。";
+      input.focus();
+      return;
+    }
+    onSave(value);
+    close();
+  };
+  root.querySelector("[data-save]").onclick = save;
+  root.querySelector("[data-cancel]").onclick = close;
+  root.onclick = (event) => { if (event.target === root) close(); };
+  root.onkeydown = (event) => {
+    if (event.key === "Enter") save();
+    if (event.key === "Escape") close();
+  };
+  input.focus();
+  input.select();
+}
+
 function parseConfig(widget) {
   try {
     const value = JSON.parse(widget?.value || "[]");
@@ -104,11 +156,10 @@ function makeRowWidget(node, row, index, rows, names, save, rebuild) {
         row.strength = Math.round((Number(row.strength ?? 1) - 0.05) * 100) / 100;
         save();
       } else if (x < (this._hit.valueX + this._hit.plusX) / 2) {
-        const value = globalThis.prompt("LoRA strength", String(row.strength ?? 1));
-        if (value !== null && Number.isFinite(Number(value))) {
-          row.strength = Number(value);
+        showStrengthEditor(row.strength ?? 1, (value) => {
+          row.strength = value;
           save();
-        }
+        });
       } else {
         row.strength = Math.round((Number(row.strength ?? 1) + 0.05) * 100) / 100;
         save();
