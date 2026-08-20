@@ -14,9 +14,9 @@ const EMPTY_DRAFT = () => ({
 const css = `
 .pw-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(8,12,18,.72);display:grid;place-items:center;padding:24px;font-family:Inter,system-ui,sans-serif}
 .pw-modal{width:min(980px,96vw);height:min(720px,92vh);display:grid;grid-template-columns:300px 1fr;background:#151a22;color:#e8edf5;border:1px solid #343d4c;border-radius:14px;box-shadow:0 30px 90px #000a;overflow:hidden}
-.pw-list{background:#10151c;border-right:1px solid #303846;padding:18px;overflow:auto}.pw-list h2{font-size:17px;margin:0 0 6px}.pw-list-note{font-size:12px;color:#7f8da0;margin:0 0 10px}.pw-filter{box-sizing:border-box;width:100%;margin:0 0 12px;padding:8px 9px;border:1px solid #344052;border-radius:7px;background:#171e28;color:#dce5f0;outline:none}.pw-filter:focus{border-color:#7aa2d8}
+.pw-list{background:#10151c;border-right:1px solid #303846;padding:18px;overflow:auto}.pw-list-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}.pw-list h2{font-size:17px;margin:0}.pw-btn.pw-new-btn{padding:5px 9px;font-size:12px}.pw-list-note{font-size:12px;color:#7f8da0;margin:0 0 10px}.pw-filter{box-sizing:border-box;width:100%;margin:0 0 12px;padding:8px 9px;border:1px solid #344052;border-radius:7px;background:#171e28;color:#dce5f0;outline:none}.pw-filter:focus{border-color:#7aa2d8}
 .pw-entry{display:block;margin:3px 0;border:1px solid transparent;border-radius:8px;overflow:hidden}.pw-entry:hover,.pw-entry.active{background:#202936;border-color:#394657}.pw-entry-main{box-sizing:border-box;width:100%;border:0;background:transparent;color:#dfe7f2;cursor:pointer;text-align:left;padding:9px 10px}.pw-entry-main small{display:block;color:#8795a8;margin-top:3px}
-.pw-editor{padding:22px 26px;overflow:auto}.pw-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.pw-head strong{font-size:18px}.pw-mode{display:inline-block;margin-left:8px;padding:3px 7px;border-radius:99px;background:#263448;color:#a9c6e8;font-size:11px;vertical-align:2px}
+.pw-editor{padding:22px 26px;overflow:auto}.pw-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.pw-head strong{font-size:18px}.pw-mode{display:inline-block;margin-left:8px;padding:3px 7px;border-radius:99px;background:#263448;color:#a9c6e8;font-size:11px;vertical-align:2px}.pw-mode.unsaved{background:#743b20;color:#ffd09e;box-shadow:0 0 0 1px #b76836}
 .pw-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.pw-field{display:grid;gap:6px}.pw-field.full{grid-column:1/-1}.pw-field label{font-size:12px;color:#9aa8ba}.pw-field input,.pw-field textarea{box-sizing:border-box;width:100%;border:1px solid #3a4555;border-radius:8px;background:#0f141b;color:#edf3fa;padding:10px 11px;outline:none}.pw-field textarea{min-height:230px;resize:vertical}.pw-field input:focus,.pw-field textarea:focus{border-color:#7aa2d8;box-shadow:0 0 0 3px #527db32b}.pw-combobox{position:relative}.pw-combobox input{padding-right:38px}.pw-combo-toggle{position:absolute;right:1px;top:1px;width:36px;height:calc(100% - 2px);border:0;background:transparent;color:#a9b6c8;cursor:pointer}.pw-combo-toggle:hover{color:#fff}.pw-group-menu{position:absolute;z-index:4;left:0;right:0;top:calc(100% + 5px);max-height:190px;overflow:auto;padding:5px;background:#171e28;border:1px solid #3a4658;border-radius:8px;box-shadow:0 12px 30px #0008}.pw-group-menu[hidden]{display:none}.pw-group-option{display:block;width:100%;padding:9px 10px;border:0;border-radius:6px;background:transparent;color:#dfe7f2;text-align:left;cursor:pointer}.pw-group-option:hover,.pw-group-option:focus{background:#293647;color:#fff;outline:none}.pw-group-empty{padding:9px 10px;color:#7f8da0;font-size:12px}
 .pw-actions{display:flex;justify-content:space-between;gap:10px;margin-top:20px}.pw-actions div{display:flex;gap:9px}.pw-btn{border:1px solid #3d495a;border-radius:8px;background:#222b37;color:#eaf0f7;padding:9px 14px;cursor:pointer}.pw-btn:hover{background:#2b3746}.pw-btn.primary{background:#4778ad;border-color:#5c8dc2}.pw-btn.danger{color:#ffb8b2}.pw-btn[disabled]{opacity:.4;cursor:not-allowed}.pw-empty{color:#8795a8;padding:12px 8px}.pw-status{font-size:12px;color:#93a3b7;margin-top:10px;min-height:18px}
 @media(max-width:720px){.pw-modal{grid-template-columns:1fr;height:94vh}.pw-list{max-height:210px;border-right:0;border-bottom:1px solid #303846}.pw-grid{grid-template-columns:1fr}}
@@ -57,7 +57,7 @@ async function openWarehouse(node) {
   root.innerHTML = `
     <section class="pw-modal" role="dialog" aria-modal="true" aria-label="提示词仓库">
       <aside class="pw-list">
-        <h2>提示词仓库</h2>
+        <div class="pw-list-head"><h2>提示词仓库</h2><button class="pw-btn pw-new-btn" data-new>＋ 新增</button></div>
         <p class="pw-list-note">点击条目选择，使用右侧按钮加载到节点</p>
         <select class="pw-filter" data-filter aria-label="按分组筛选"></select>
         <div data-list></div>
@@ -133,6 +133,7 @@ async function openWarehouse(node) {
     writeDraft(EMPTY_DRAFT());
     query("[data-editor-title]").textContent = "新增提示词";
     query("[data-mode]").textContent = "草稿";
+    query("[data-mode]").classList.add("unsaved");
     query("[data-delete]").disabled = true;
     query("[data-load]").disabled = true;
     query("[data-status]").textContent = "当前内容尚未保存。";
@@ -145,6 +146,7 @@ async function openWarehouse(node) {
     writeDraft({ ...entry });
     query("[data-editor-title]").textContent = "编辑提示词";
     query("[data-mode]").textContent = "已保存";
+    query("[data-mode]").classList.remove("unsaved");
     query("[data-delete]").disabled = false;
     query("[data-load]").disabled = false;
     query("[data-status]").textContent = "已选择，可点击加载或在右侧修改。";
@@ -209,6 +211,7 @@ async function openWarehouse(node) {
     query(`[data-${field}]`).addEventListener("input", () => {
       if (!editingId) return;
       query("[data-mode]").textContent = "未保存";
+      query("[data-mode]").classList.add("unsaved");
       query("[data-status]").textContent = "修改只存在于草稿中，点击保存后生效。";
     });
   }
@@ -243,6 +246,7 @@ async function openWarehouse(node) {
       : [...entries, draft];
     await persist(nextEntries, editingId ? "修改已保存。" : "新提示词已保存。");
   };
+  query("[data-new]").onclick = beginNew;
   query("[data-load]").onclick = () => {
     if (!editingId) return;
     loadIntoNode(readDraft());
