@@ -1,4 +1,10 @@
 import random
+import json
+
+import comfy.sd
+import comfy.utils
+import folder_paths
+
 from .prompt_store import load_entries
 
 def _dimension(value):
@@ -91,11 +97,76 @@ class PromptLine:
         return (_join_prompts(prompt_in, prompt),)
 
 
+class MultiLoraLoader:
+    """Apply an ordered, workflow-persisted list of LoRAs to MODEL and CLIP."""
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "clip": ("CLIP",),
+                # The web extension turns this into the multi-row editor. Keeping
+                # one real widget is intentional: ComfyUI always serializes it.
+                "lora_config": ("STRING", {
+                    "default": "[]",
+                    "multiline": True,
+                    "lora_names": folder_paths.get_filename_list("loras"),
+                }),
+            }
+        }
+
+    RETURN_TYPES = ("MODEL", "CLIP")
+    RETURN_NAMES = ("model", "clip")
+    FUNCTION = "load_loras"
+    CATEGORY = "Prompt Warehouse"
+    DESCRIPTION = "按列表顺序加载多个 LoRA，并分别设置 MODEL / CLIP 强度。"
+
+    def __init__(self):
+        self._cache = {}
+
+    def _load(self, name):
+        path = folder_paths.get_full_path_or_raise("loras", name)
+        cached = self._cache.get(path)
+        if cached is None:
+            cached = comfy.utils.load_torch_file(path, safe_load=True)
+            self._cache[path] = cached
+        return cached
+
+    def load_loras(self, model, clip, lora_config="[]"):
+        try:
+            entries = json.loads(lora_config or "[]")
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ValueError(f"LoRA 配置不是有效的 JSON: {error}") from error
+        if not isinstance(entries, list):
+            raise ValueError("LoRA 配置必须是一个列表")
+
+        available = set(folder_paths.get_filename_list("loras"))
+        for entry in entries:
+            if not isinstance(entry, dict) or not entry.get("enabled", True):
+                continue
+            name = str(entry.get("name", ""))
+            if not name:
+                continue
+            if name not in available:
+                raise ValueError(f"找不到 LoRA: {name}")
+            strength_model = float(entry.get("strength_model", 1.0))
+            strength_clip = float(entry.get("strength_clip", 1.0))
+            if strength_model == 0 and strength_clip == 0:
+                continue
+            model, clip = comfy.sd.load_lora_for_models(
+                model, clip, self._load(name), strength_model, strength_clip
+            )
+        return (model, clip)
+
+
 NODE_CLASS_MAPPINGS = {
     "PromptWarehouse": PromptWarehouse,
     "PromptLine": PromptLine,
+    "PromptWarehouseMultiLoraLoader": MultiLoraLoader,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "PromptWarehouse": "Prompt Warehouse / 提示词仓库",
     "PromptLine": "Prompt Line / 单行提示词",
+    "PromptWarehouseMultiLoraLoader": "Multi LoRA Loader / 多 LoRA 加载器",
 }

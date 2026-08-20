@@ -1,6 +1,6 @@
 # ComfyUI Prompt Warehouse
 
-当前版本：`v0.1.1`
+当前版本：`v0.2.0`
 
 一个用于整理、复用和随机抽取提示词的 ComfyUI 自定义节点。每条仓库记录包含标题、分组、多行提示词，以及可选的 Width / Height。
 
@@ -26,6 +26,9 @@
 - 数据持久化保存在插件目录的 `data/prompts.json`
 - 实际仓库数据不受 Git 管理，更新插件不会覆盖该文件
 - 提供 `Prompt Line / 单行提示词` 节点，用单行输入框直接输出提示词
+- 提供 `Multi LoRA Loader / 多 LoRA 加载器`，可按顺序加载任意多个 LoRA
+- 每个 LoRA 可独立启停，并分别设置 MODEL / CLIP 强度
+- LoRA 列表及 `Add LoRA` 按钮在工作流重载或重启 ComfyUI 后会自动恢复
 
 ## 安装
 
@@ -43,6 +46,12 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 在节点菜单的 `Prompt Warehouse` 分类中添加 **Prompt Warehouse / 提示词仓库**。
 
 如需一个简单的单行提示词节点，可在同一分类中添加 **Prompt Line / 单行提示词**。节点会将左侧 `prompt_in` 接口传入的上游提示词与内部单行 `prompt` 输入框内容用 `, ` 拼接后输出，且不会覆盖输入框内容。
+
+### 多 LoRA 加载器
+
+在 `Prompt Warehouse` 分类中添加 **Multi LoRA Loader / 多 LoRA 加载器**，连接基础模型的 `MODEL` 和 `CLIP`，再点击节点底部的 `＋ Add LoRA` 添加任意数量的 LoRA。每一项都可以选择文件、独立启停、调整 MODEL / CLIP 强度或删除；LoRA 会从上到下依次应用。
+
+节点把完整列表保存到工作流中的固定配置控件，而不是依赖临时动态控件，因此重新启动 ComfyUI 或重新打开工作流后，已添加的 LoRA 和添加按钮都会恢复。
 
 ### 管理仓库
 
