@@ -15,9 +15,13 @@ function parseConfig(widget) {
 function hideConfigWidget(widget) {
   if (!widget || widget._pwHidden) return;
   widget._pwHidden = true;
+  widget.hidden = true;
   widget.type = "pw-hidden-lora-config";
   widget.computeSize = () => [0, -4];
   widget.draw = () => {};
+  for (const element of [widget.element, widget.inputEl, widget.inputElement]) {
+    if (element?.style) element.style.display = "none";
+  }
 }
 
 function shortName(name, limit) {

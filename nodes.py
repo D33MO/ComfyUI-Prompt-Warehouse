@@ -110,7 +110,7 @@ class MultiLoraLoader:
                 # one real widget is intentional: ComfyUI always serializes it.
                 "lora_config": ("STRING", {
                     "default": "[]",
-                    "multiline": True,
+                    "multiline": False,
                     "lora_names": folder_paths.get_filename_list("loras"),
                 }),
             }
