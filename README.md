@@ -27,7 +27,7 @@
 - 实际仓库数据不受 Git 管理，更新插件不会覆盖该文件
 - 提供 `Prompt Line / 单行提示词` 节点，用单行输入框直接输出提示词
 - 提供 `Multi LoRA Loader / 多 LoRA 加载器`，可按顺序加载任意多个 LoRA
-- 每个 LoRA 可独立启停，并分别设置 MODEL / CLIP 强度
+- 每个 LoRA 可独立启停，以紧凑单行界面调整统一强度
 - LoRA 列表及 `Add LoRA` 按钮在工作流重载或重启 ComfyUI 后会自动恢复
 
 ## 安装
@@ -49,7 +49,7 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 
 ### 多 LoRA 加载器
 
-在 `Prompt Warehouse` 分类中添加 **Multi LoRA Loader / 多 LoRA 加载器**，连接基础模型的 `MODEL` 和 `CLIP`，再点击节点底部的 `＋ Add LoRA` 添加任意数量的 LoRA。每一项都可以选择文件、独立启停、调整 MODEL / CLIP 强度或删除；LoRA 会从上到下依次应用。
+在 `Prompt Warehouse` 分类中添加 **Multi LoRA Loader / 多 LoRA 加载器**，连接基础模型的 `MODEL` 和 `CLIP`，再点击节点底部的 `＋ Add LoRA` 添加任意数量的 LoRA。每个 LoRA 只占一行：点击左侧圆点启停，点击名称选择文件，使用 `− / +` 或点击数值调整强度；右键该行可以启停、上移、下移或删除。LoRA 会从上到下依次应用，同一强度同时作用于 MODEL 和 CLIP。
 
 节点把完整列表保存到工作流中的固定配置控件，而不是依赖临时动态控件，因此重新启动 ComfyUI 或重新打开工作流后，已添加的 LoRA 和添加按钮都会恢复。
 

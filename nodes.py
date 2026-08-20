@@ -120,7 +120,7 @@ class MultiLoraLoader:
     RETURN_NAMES = ("model", "clip")
     FUNCTION = "load_loras"
     CATEGORY = "Prompt Warehouse"
-    DESCRIPTION = "按列表顺序加载多个 LoRA，并分别设置 MODEL / CLIP 强度。"
+    DESCRIPTION = "按列表顺序加载多个 LoRA；单一强度同时应用到 MODEL 和 CLIP。"
 
     def __init__(self):
         self._cache = {}
@@ -150,12 +150,11 @@ class MultiLoraLoader:
                 continue
             if name not in available:
                 raise ValueError(f"找不到 LoRA: {name}")
-            strength_model = float(entry.get("strength_model", 1.0))
-            strength_clip = float(entry.get("strength_clip", 1.0))
-            if strength_model == 0 and strength_clip == 0:
+            strength = float(entry.get("strength", entry.get("strength_model", 1.0)))
+            if strength == 0:
                 continue
             model, clip = comfy.sd.load_lora_for_models(
-                model, clip, self._load(name), strength_model, strength_clip
+                model, clip, self._load(name), strength, strength
             )
         return (model, clip)
 
