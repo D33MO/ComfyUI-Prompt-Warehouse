@@ -4,6 +4,7 @@ import json
 import comfy.sd
 import comfy.utils
 import folder_paths
+from nodes import SaveImage as ComfySaveImage
 
 from .prompt_store import load_entries
 
@@ -186,15 +187,24 @@ class MultiLoraLoader:
         return (model, clip)
 
 
+class SaveImageWithDelete(ComfySaveImage):
+    """ComfyUI's standard Save Image with a safe post-save delete action in the UI."""
+
+    CATEGORY = "Prompt Warehouse"
+    DESCRIPTION = "保存并预览图片，之后可手动删除 output 目录中的对应源文件。"
+
+
 NODE_CLASS_MAPPINGS = {
     "PromptWarehouse": PromptWarehouse,
     "PromptLine": PromptLine,
     "PromptMultiline": PromptMultiline,
     "PromptWarehouseMultiLoraLoader": MultiLoraLoader,
+    "PromptWarehouseSaveImageWithDelete": SaveImageWithDelete,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "PromptWarehouse": "Prompt Warehouse / 提示词仓库",
     "PromptLine": "Prompt Line / 单行提示词",
     "PromptMultiline": "Prompt Multiline / 多行提示词",
     "PromptWarehouseMultiLoraLoader": "Multi LoRA Loader / 多 LoRA 加载器",
+    "PromptWarehouseSaveImageWithDelete": "Save Image with Delete / 可删除图片保存",
 }

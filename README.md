@@ -20,6 +20,7 @@
 - 提供 `Multi LoRA Loader / 多 LoRA 加载器`，可按顺序加载任意多个 LoRA
 - 每个 LoRA 可独立启停，以紧凑单行界面调整统一强度
 - LoRA 列表及 `Add LoRA` 按钮在工作流重载或重启 ComfyUI 后会自动恢复
+- 提供 `Save Image with Delete / 可删除图片保存`，保存预览后可删除 output 中的对应源文件
 
 ## 安装
 
@@ -39,6 +40,10 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 如需一个简单的单行提示词节点，可在同一分类中添加 **Prompt Line / 单行提示词**。节点会将左侧 `prompt_in` 接口传入的上游提示词与内部单行 `prompt` 输入框内容用 `, ` 拼接后输出，且不会覆盖输入框内容。
 
 如需更大的编辑区域，可添加 **Prompt Multiline / 多行提示词**。它与单行节点的输入、拼接和输出逻辑完全一致，区别仅在于内部 `prompt` 使用多行输入框。
+
+### 可删除图片保存
+
+**Save Image with Delete / 可删除图片保存** 的保存、命名和预览行为与 ComfyUI 原生 `Save Image` 一致。节点完成输出后会记录本次保存的图片，并显示“删除最近输出”按钮；第一次点击后，节点下方会增加一行“确认永久删除”，只有再次点击确认才会删除 ComfyUI `output` 目录中的对应源文件并清除节点预览。删除接口会校验路径，只允许操作 `output` 目录内由节点返回的文件信息。
 
 ### 多 LoRA 加载器
 
