@@ -1,0 +1,35 @@
+{
+  "PromptWarehouse": {
+    "display_name": "提示词仓库",
+    "description": "管理、选择或按分组随机抽取提示词及其可选尺寸。",
+    "inputs": {
+      "prompt": { "name": "提示词" }, "width": { "name": "宽度" }, "height": { "name": "高度" },
+      "random_group": { "name": "随机分组", "options": { "全部": "全部" } },
+      "random_enabled": { "name": "启用随机" }, "prompt_in": { "name": "提示词输入" }, "clip": { "name": "CLIP" }
+    },
+    "outputs": { "0": { "name": "提示词" }, "1": { "name": "宽度" }, "2": { "name": "高度" }, "3": { "name": "条件" } }
+  },
+  "PromptLine": {
+    "display_name": "单行提示词",
+    "description": "将上游提示词与单行输入框中的提示词拼接后输出。",
+    "inputs": { "prompt": { "name": "提示词" }, "prompt_in": { "name": "提示词输入" } },
+    "outputs": { "0": { "name": "提示词" } }
+  },
+  "PromptMultiline": {
+    "display_name": "多行提示词",
+    "description": "将上游提示词与多行输入框中的提示词拼接后输出。",
+    "inputs": { "prompt": { "name": "提示词" }, "prompt_in": { "name": "提示词输入" } },
+    "outputs": { "0": { "name": "提示词" } }
+  },
+  "PromptWarehouseMultiLoraLoader": {
+    "display_name": "多 LoRA 加载器",
+    "description": "按列表顺序加载多个 LoRA，单一强度同时应用到模型和 CLIP。",
+    "inputs": { "model": { "name": "模型" }, "clip": { "name": "CLIP" }, "lora_config": { "name": "LoRA 配置" } },
+    "outputs": { "0": { "name": "模型" }, "1": { "name": "CLIP" } }
+  },
+  "PromptWarehouseSaveImageWithDelete": {
+    "display_name": "可删除图片保存",
+    "description": "保存并预览图片，之后可手动删除 output 目录中的对应源文件。",
+    "inputs": { "images": { "name": "图片" }, "filename_prefix": { "name": "文件名前缀" } }
+  }
+}

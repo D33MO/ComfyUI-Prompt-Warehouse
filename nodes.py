@@ -30,11 +30,11 @@ class PromptWarehouse:
         return {
             "required": {
                 "prompt": ("STRING", {"default": "", "multiline": True, "dynamicPrompts": False,
-                                        "placeholder": "在这里输入提示词，或从仓库载入…"}),
-                "width": ("STRING", {"default": "", "placeholder": "未设置"}),
-                "height": ("STRING", {"default": "", "placeholder": "未设置"}),
+                                        "placeholder": "Enter a prompt or load one from the warehouse…"}),
+                "width": ("STRING", {"default": "", "placeholder": "Not set"}),
+                "height": ("STRING", {"default": "", "placeholder": "Not set"}),
                 "random_group": (["全部", *groups], {"default": "全部"}),
-                "random_enabled": ("BOOLEAN", {"default": False, "label_on": "开启", "label_off": "关闭"}),
+                "random_enabled": ("BOOLEAN", {"default": False, "label_on": "On", "label_off": "Off"}),
             },
             "optional": {
                 "prompt_in": ("STRING", {"forceInput": True}),
@@ -46,7 +46,7 @@ class PromptWarehouse:
     RETURN_NAMES = ("prompt", "width", "height", "conditioning")
     FUNCTION = "build"
     CATEGORY = "Prompt Warehouse"
-    DESCRIPTION = "管理、选择或按分组随机抽取提示词及其可选尺寸。"
+    DESCRIPTION = "Manage, select, or randomly choose grouped prompts with optional dimensions."
 
     @classmethod
     def IS_CHANGED(cls, prompt, width, height, random_group, random_enabled, prompt_in="", clip=None):
@@ -80,7 +80,7 @@ class PromptLine:
                     "default": "",
                     "multiline": False,
                     "dynamicPrompts": False,
-                    "placeholder": "输入提示词…",
+                    "placeholder": "Enter a prompt…",
                 }),
             },
             "optional": {
@@ -92,7 +92,7 @@ class PromptLine:
     RETURN_NAMES = ("prompt",)
     FUNCTION = "output"
     CATEGORY = "Prompt Warehouse"
-    DESCRIPTION = "将上游提示词与单行输入框中的提示词拼接后输出。"
+    DESCRIPTION = "Join an upstream prompt with a single-line prompt."
 
     def output(self, prompt, prompt_in=""):
         return (_join_prompts(prompt_in, prompt),)
@@ -107,7 +107,7 @@ class PromptMultiline:
                     "default": "",
                     "multiline": True,
                     "dynamicPrompts": False,
-                    "placeholder": "输入多行提示词…",
+                    "placeholder": "Enter a multiline prompt…",
                 }),
             },
             "optional": {
@@ -119,7 +119,7 @@ class PromptMultiline:
     RETURN_NAMES = ("prompt",)
     FUNCTION = "output"
     CATEGORY = "Prompt Warehouse"
-    DESCRIPTION = "将上游提示词与多行输入框中的提示词拼接后输出。"
+    DESCRIPTION = "Join an upstream prompt with a multiline prompt."
 
     def output(self, prompt, prompt_in=""):
         return (_join_prompts(prompt_in, prompt),)
@@ -148,7 +148,7 @@ class MultiLoraLoader:
     RETURN_NAMES = ("model", "clip")
     FUNCTION = "load_loras"
     CATEGORY = "Prompt Warehouse"
-    DESCRIPTION = "按列表顺序加载多个 LoRA；单一强度同时应用到 MODEL 和 CLIP。"
+    DESCRIPTION = "Load multiple LoRAs in order with one strength applied to MODEL and CLIP."
 
     def __init__(self):
         self._cache = {}
@@ -191,7 +191,7 @@ class SaveImageWithDelete(ComfySaveImage):
     """ComfyUI's standard Save Image with a safe post-save delete action in the UI."""
 
     CATEGORY = "Prompt Warehouse"
-    DESCRIPTION = "保存并预览图片，之后可手动删除 output 目录中的对应源文件。"
+    DESCRIPTION = "Save and preview images, then optionally delete their source files from output."
 
 
 NODE_CLASS_MAPPINGS = {
@@ -202,9 +202,9 @@ NODE_CLASS_MAPPINGS = {
     "PromptWarehouseSaveImageWithDelete": SaveImageWithDelete,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "PromptWarehouse": "Prompt Warehouse / 提示词仓库",
-    "PromptLine": "Prompt Line / 单行提示词",
-    "PromptMultiline": "Prompt Multiline / 多行提示词",
-    "PromptWarehouseMultiLoraLoader": "Multi LoRA Loader / 多 LoRA 加载器",
-    "PromptWarehouseSaveImageWithDelete": "Save Image with Delete / 可删除图片保存",
+    "PromptWarehouse": "Prompt Warehouse",
+    "PromptLine": "Prompt Line",
+    "PromptMultiline": "Prompt Multiline",
+    "PromptWarehouseMultiLoraLoader": "Multi LoRA Loader",
+    "PromptWarehouseSaveImageWithDelete": "Save Image with Delete",
 }

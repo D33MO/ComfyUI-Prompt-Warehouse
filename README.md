@@ -1,6 +1,6 @@
 # ComfyUI Prompt Warehouse
 
-当前版本：`v0.2.0`
+当前版本：`v0.3.0`
 
 一个用于整理、复用和随机抽取提示词的 ComfyUI 自定义节点包，同时提供单行/多行提示词节点和支持工作流持久化的多 LoRA 加载器。
 
@@ -21,6 +21,7 @@
 - 每个 LoRA 可独立启停，以紧凑单行界面调整统一强度
 - LoRA 列表及 `Add LoRA` 按钮在工作流重载或重启 ComfyUI 后会自动恢复
 - 提供 `Save Image with Delete / 可删除图片保存`，保存预览后可删除 output 中的对应源文件
+- 根据 ComfyUI 的 `Comfy → Locale` 设置自动切换简体中文或英文节点界面
 
 ## 安装
 

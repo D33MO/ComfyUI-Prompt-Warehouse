@@ -1,0 +1,35 @@
+{
+  "PromptWarehouse": {
+    "display_name": "Prompt Warehouse",
+    "description": "Manage, select, or randomly choose grouped prompts with optional dimensions.",
+    "inputs": {
+      "prompt": { "name": "Prompt" }, "width": { "name": "Width" }, "height": { "name": "Height" },
+      "random_group": { "name": "Random group", "options": { "全部": "All" } },
+      "random_enabled": { "name": "Random enabled" }, "prompt_in": { "name": "Prompt input" }, "clip": { "name": "CLIP" }
+    },
+    "outputs": { "0": { "name": "Prompt" }, "1": { "name": "Width" }, "2": { "name": "Height" }, "3": { "name": "Conditioning" } }
+  },
+  "PromptLine": {
+    "display_name": "Prompt Line",
+    "description": "Join an upstream prompt with a single-line prompt.",
+    "inputs": { "prompt": { "name": "Prompt" }, "prompt_in": { "name": "Prompt input" } },
+    "outputs": { "0": { "name": "Prompt" } }
+  },
+  "PromptMultiline": {
+    "display_name": "Prompt Multiline",
+    "description": "Join an upstream prompt with a multiline prompt.",
+    "inputs": { "prompt": { "name": "Prompt" }, "prompt_in": { "name": "Prompt input" } },
+    "outputs": { "0": { "name": "Prompt" } }
+  },
+  "PromptWarehouseMultiLoraLoader": {
+    "display_name": "Multi LoRA Loader",
+    "description": "Load multiple LoRAs in order with one strength applied to MODEL and CLIP.",
+    "inputs": { "model": { "name": "Model" }, "clip": { "name": "CLIP" }, "lora_config": { "name": "LoRA config" } },
+    "outputs": { "0": { "name": "Model" }, "1": { "name": "CLIP" } }
+  },
+  "PromptWarehouseSaveImageWithDelete": {
+    "display_name": "Save Image with Delete",
+    "description": "Save and preview images, then optionally delete the corresponding source files from output.",
+    "inputs": { "images": { "name": "Images" }, "filename_prefix": { "name": "Filename prefix" } }
+  }
+}

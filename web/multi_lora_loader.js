@@ -1,4 +1,5 @@
 import { app } from "../../scripts/app.js";
+import { t } from "./i18n.js";
 
 const NODE_NAME = "PromptWarehouseMultiLoraLoader";
 const ROW_HEIGHT = 23;
@@ -25,10 +26,10 @@ function showStrengthEditor(initialValue, onSave) {
   root.className = "pw-lora-strength-backdrop";
   root.innerHTML = `
     <div class="pw-lora-strength-dialog" role="dialog" aria-modal="true" aria-label="LoRA strength">
-      <label>LoRA Strength</label>
+      <label>${t("strength")}</label>
       <input type="number" step="0.05" inputmode="decimal" value="${Number(initialValue)}">
       <div class="pw-lora-strength-error"></div>
-      <div class="pw-lora-strength-actions"><button data-cancel>取消</button><button data-save>确定</button></div>
+      <div class="pw-lora-strength-actions"><button data-cancel>${t("cancel")}</button><button data-save>${t("confirm")}</button></div>
     </div>`;
   document.body.append(root);
   const input = root.querySelector("input");
@@ -37,7 +38,7 @@ function showStrengthEditor(initialValue, onSave) {
   const save = () => {
     const value = Number(input.value);
     if (!input.value.trim() || !Number.isFinite(value)) {
-      error.textContent = "请输入有效数字。";
+      error.textContent = t("invalidNumber");
       input.focus();
       return;
     }
@@ -77,17 +78,17 @@ function hideConfigWidget(widget) {
 }
 
 function shortName(name, limit) {
-  const value = String(name || "Select a LoRA…").replace(/\\/g, "/");
+  const value = String(name || `${t("selectLora")}…`).replace(/\\/g, "/");
   return value.length > limit ? `${value.slice(0, Math.max(1, limit - 1))}…` : value;
 }
 
 function chooseLora(event, names, callback) {
-  const items = (names.length ? names : ["No LoRA files found"]).map((name) => ({
+  const items = (names.length ? names : [t("noLora")]).map((name) => ({
     content: name,
     disabled: !names.length,
     callback: () => callback(name),
   }));
-  new LiteGraph.ContextMenu(items, { event, title: "Select LoRA" });
+  new LiteGraph.ContextMenu(items, { event, title: t("selectLora") });
 }
 
 function removeEditorWidgets(node) {
@@ -171,12 +172,12 @@ function makeRowWidget(node, row, index, rows, names, save, rebuild) {
 
   widget._pwContextOptions = () => [
     {
-      content: row.enabled ? "⚫ Toggle Off" : "🟢 Toggle On",
+      content: row.enabled ? `⚫ ${t("toggleOff")}` : `🟢 ${t("toggleOn")}`,
       callback: () => { row.enabled = !row.enabled; save(); },
     },
     null,
     {
-      content: "⬆ Move Up",
+      content: `⬆ ${t("moveUp")}`,
       disabled: index === 0,
       callback: () => {
         if (index > 0) [rows[index - 1], rows[index]] = [rows[index], rows[index - 1]];
@@ -184,7 +185,7 @@ function makeRowWidget(node, row, index, rows, names, save, rebuild) {
       },
     },
     {
-      content: "⬇ Move Down",
+      content: `⬇ ${t("moveDown")}`,
       disabled: index === rows.length - 1,
       callback: () => {
         if (index < rows.length - 1) [rows[index], rows[index + 1]] = [rows[index + 1], rows[index]];
@@ -192,7 +193,7 @@ function makeRowWidget(node, row, index, rows, names, save, rebuild) {
       },
     },
     {
-      content: "🗑 Remove",
+      content: `🗑 ${t("remove")}`,
       callback: () => { rows.splice(index, 1); rebuild(); },
     },
   ];
@@ -226,7 +227,7 @@ function renderEditor(node, names) {
     added.push(widget);
   });
 
-  const button = node.addWidget("button", "＋ Add LoRA", null, (_value, _canvas, _node, _pos, event) => {
+  const button = node.addWidget("button", t("addLora"), null, (_value, _canvas, _node, _pos, event) => {
     const add = (name) => {
       rows.push({ enabled: true, name, strength: 1 });
       rebuild();

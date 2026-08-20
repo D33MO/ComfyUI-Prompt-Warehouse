@@ -1,5 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+import { t } from "./i18n.js";
 
 const NODE_NAME = "PromptWarehouse";
 const EMPTY_DRAFT = () => ({
@@ -50,36 +51,36 @@ async function openWarehouse(node) {
   const data = await response.json();
   let entries = data.entries || [];
   let editingId = null;
-  let filterGroup = "全部分组";
+  let filterGroup = t("allGroups");
 
   const root = document.createElement("div");
   root.className = "pw-backdrop";
   root.innerHTML = `
-    <section class="pw-modal" role="dialog" aria-modal="true" aria-label="提示词仓库">
+    <section class="pw-modal" role="dialog" aria-modal="true" aria-label="${t("warehouse")}">
       <aside class="pw-list">
-        <div class="pw-list-head"><h2>提示词仓库</h2><button class="pw-btn pw-new-btn" data-new>＋ 新增</button></div>
-        <p class="pw-list-note">点击条目选择，使用右侧按钮加载到节点</p>
-        <select class="pw-filter" data-filter aria-label="按分组筛选"></select>
+        <div class="pw-list-head"><h2>${t("warehouse")}</h2><button class="pw-btn pw-new-btn" data-new>${t("add")}</button></div>
+        <p class="pw-list-note">${t("listHint")}</p>
+        <select class="pw-filter" data-filter aria-label="${t("filterGroup")}"></select>
         <div data-list></div>
       </aside>
       <main class="pw-editor">
         <div class="pw-head">
-          <strong><span data-editor-title>新增提示词</span><span class="pw-mode" data-mode>草稿</span></strong>
-          <button class="pw-btn" data-close>关闭</button>
+          <strong><span data-editor-title>${t("newPrompt")}</span><span class="pw-mode" data-mode>${t("draft")}</span></strong>
+          <button class="pw-btn" data-close>${t("close")}</button>
         </div>
         <div class="pw-grid">
-          <div class="pw-field"><label>标题</label><input data-title placeholder="例如：雨夜街景"></div>
-          <div class="pw-field"><label>分组</label><div class="pw-combobox" data-group-combo><input data-group role="combobox" aria-expanded="false" autocomplete="off" placeholder="选择或输入新分组"><button class="pw-combo-toggle" data-group-toggle type="button" tabindex="-1" aria-label="显示已有分组">▼</button><div class="pw-group-menu" data-groups role="listbox" hidden></div></div></div>
-          <div class="pw-field full"><label>提示词</label><textarea data-prompt placeholder="输入完整提示词…"></textarea></div>
-          <div class="pw-field"><label>Width（可选）</label><input data-width type="number" min="1" placeholder="未设置"></div>
-          <div class="pw-field"><label>Height（可选）</label><input data-height type="number" min="1" placeholder="未设置"></div>
+          <div class="pw-field"><label>${t("title")}</label><input data-title placeholder="${t("titlePlaceholder")}"></div>
+          <div class="pw-field"><label>${t("group")}</label><div class="pw-combobox" data-group-combo><input data-group role="combobox" aria-expanded="false" autocomplete="off" placeholder="${t("groupPlaceholder")}"><button class="pw-combo-toggle" data-group-toggle type="button" tabindex="-1" aria-label="${t("showGroups")}">▼</button><div class="pw-group-menu" data-groups role="listbox" hidden></div></div></div>
+          <div class="pw-field full"><label>${t("prompt")}</label><textarea data-prompt placeholder="${t("promptPlaceholder")}"></textarea></div>
+          <div class="pw-field"><label>Width (${t("optional")})</label><input data-width type="number" min="1" placeholder="${t("unset")}"></div>
+          <div class="pw-field"><label>Height (${t("optional")})</label><input data-height type="number" min="1" placeholder="${t("unset")}"></div>
         </div>
-        <div class="pw-status" data-status>当前内容尚未保存。</div>
+        <div class="pw-status" data-status>${t("notSaved")}</div>
         <div class="pw-actions">
-          <button class="pw-btn danger" data-delete disabled>删除</button>
+          <button class="pw-btn danger" data-delete disabled>${t("delete")}</button>
           <div>
-            <button class="pw-btn" data-load disabled>加载</button>
-            <button class="pw-btn primary" data-save>保存</button>
+            <button class="pw-btn" data-load disabled>${t("load")}</button>
+            <button class="pw-btn primary" data-save>${t("save")}</button>
           </div>
         </div>
       </main>
@@ -108,16 +109,16 @@ async function openWarehouse(node) {
     const matchingGroups = groups.filter((group) => !search || group.toLocaleLowerCase().includes(search));
     query("[data-groups]").innerHTML = matchingGroups.length
       ? matchingGroups.map((group) => `<button class="pw-group-option" type="button" role="option" data-group-option="${escapeHtml(group)}">${escapeHtml(group)}</button>`).join("")
-      : `<div class="pw-group-empty">没有匹配分组，保存后将自动新增</div>`;
-    if (filterGroup !== "全部分组" && !groups.includes(filterGroup)) filterGroup = "全部分组";
-    query("[data-filter]").innerHTML = ["全部分组", ...groups]
+      : `<div class="pw-group-empty">${t("noGroupMatch")}</div>`;
+    if (filterGroup !== t("allGroups") && !groups.includes(filterGroup)) filterGroup = t("allGroups");
+    query("[data-filter]").innerHTML = [t("allGroups"), ...groups]
       .map((group) => `<option value="${escapeHtml(group)}" ${group === filterGroup ? "selected" : ""}>${escapeHtml(group)}</option>`)
       .join("");
   }
 
   function renderList() {
     renderGroups();
-    const visibleEntries = filterGroup === "全部分组"
+    const visibleEntries = filterGroup === t("allGroups")
       ? entries
       : entries.filter((entry) => entry.group === filterGroup);
     query("[data-list]").innerHTML = visibleEntries.length
@@ -125,18 +126,18 @@ async function openWarehouse(node) {
           <div class="pw-entry ${entry.id === editingId ? "active" : ""}">
             <button class="pw-entry-main" data-select-id="${escapeHtml(entry.id)}">${escapeHtml(entry.title)}<small>${escapeHtml(entry.group)}</small></button>
           </div>`).join("")
-      : `<div class="pw-empty">该分组还没有已保存的提示词。</div>`;
+      : `<div class="pw-empty">${t("noEntries")}</div>`;
   }
 
   function beginNew() {
     editingId = null;
     writeDraft(EMPTY_DRAFT());
-    query("[data-editor-title]").textContent = "新增提示词";
-    query("[data-mode]").textContent = "草稿";
+    query("[data-editor-title]").textContent = t("newPrompt");
+    query("[data-mode]").textContent = t("draft");
     query("[data-mode]").classList.add("unsaved");
     query("[data-delete]").disabled = true;
     query("[data-load]").disabled = true;
-    query("[data-status]").textContent = "当前内容尚未保存。";
+    query("[data-status]").textContent = t("notSaved");
     renderList();
     query("[data-title]").focus();
   }
@@ -144,12 +145,12 @@ async function openWarehouse(node) {
   function beginEdit(entry) {
     editingId = entry.id;
     writeDraft({ ...entry });
-    query("[data-editor-title]").textContent = "编辑提示词";
-    query("[data-mode]").textContent = "已保存";
+    query("[data-editor-title]").textContent = t("editPrompt");
+    query("[data-mode]").textContent = t("saved");
     query("[data-mode]").classList.remove("unsaved");
     query("[data-delete]").disabled = false;
     query("[data-load]").disabled = false;
-    query("[data-status]").textContent = "已选择，可点击加载或在右侧修改。";
+    query("[data-status]").textContent = t("selectedHint");
     renderList();
   }
 
@@ -163,12 +164,12 @@ async function openWarehouse(node) {
     }
     groupWidget.value = entry.group;
     node.setDirtyCanvas(true, true);
-    query("[data-status]").textContent = `已载入节点：${entry.title}`;
+    query("[data-status]").textContent = t("loadedNode", { title: entry.title });
   }
 
   async function persist(nextEntries, successMessage) {
     const status = query("[data-status]");
-    status.textContent = "正在保存…";
+    status.textContent = t("saving");
     try {
       const saveResponse = await api.fetchApi("/prompt-warehouse/prompts", {
         method: "PUT",
@@ -177,7 +178,7 @@ async function openWarehouse(node) {
       });
       const body = await saveResponse.json();
       if (!saveResponse.ok) {
-        status.textContent = body.error || "保存失败，请检查填写内容。";
+        status.textContent = body.error || t("saveInvalid");
         return false;
       }
       entries = body.entries;
@@ -189,7 +190,7 @@ async function openWarehouse(node) {
       status.textContent = successMessage;
       return true;
     } catch (error) {
-      status.textContent = `保存失败：${error.message || "无法连接 ComfyUI 后端"}`;
+      status.textContent = t("saveConnectionFailed", { error: error.message || "ComfyUI backend unavailable" });
       return false;
     }
   }
@@ -210,9 +211,9 @@ async function openWarehouse(node) {
   for (const field of fields) {
     query(`[data-${field}]`).addEventListener("input", () => {
       if (!editingId) return;
-      query("[data-mode]").textContent = "未保存";
+      query("[data-mode]").textContent = t("unsaved");
       query("[data-mode]").classList.add("unsaved");
-      query("[data-status]").textContent = "修改只存在于草稿中，点击保存后生效。";
+      query("[data-status]").textContent = t("draftChanged");
     });
   }
 
@@ -244,7 +245,7 @@ async function openWarehouse(node) {
     const nextEntries = editingId
       ? entries.map((entry) => entry.id === editingId ? draft : entry)
       : [...entries, draft];
-    await persist(nextEntries, editingId ? "修改已保存。" : "新提示词已保存。");
+    await persist(nextEntries, editingId ? t("editSaved") : t("newSaved"));
   };
   query("[data-new]").onclick = beginNew;
   query("[data-load]").onclick = () => {
@@ -254,8 +255,8 @@ async function openWarehouse(node) {
   query("[data-delete]").onclick = async () => {
     if (!editingId) return;
     const entry = entries.find((item) => item.id === editingId);
-    if (!entry || !confirm(`删除“${entry.title}”？`)) return;
-    await persist(entries.filter((item) => item.id !== editingId), "提示词已删除。");
+    if (!entry || !confirm(t("deletePromptQuestion", { title: entry.title }))) return;
+    await persist(entries.filter((item) => item.id !== editingId), t("promptDeleted"));
   };
 
   const close = () => root.remove();
@@ -285,7 +286,7 @@ app.registerExtension({
           },
         });
       }
-      this.addWidget("button", "打开仓库", null, () => openWarehouse(this));
+      this.addWidget("button", t("openWarehouse"), null, () => openWarehouse(this));
       this.size = [Math.max(this.size[0], 360), Math.max(this.size[1], 445)];
       return result;
     };

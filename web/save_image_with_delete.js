@@ -1,5 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+import { t } from "./i18n.js";
 
 const NODE_NAME = "PromptWarehouseSaveImageWithDelete";
 
@@ -16,7 +17,7 @@ function removeWidget(node, widget) {
 function addDeleteButton(node) {
   removeWidget(node, node._pwDeleteButton);
   const count = node._pwSavedImages?.length || 0;
-  const button = node.addWidget("button", withCount("删除最近输出", count), null, () => {
+  const button = node.addWidget("button", withCount(t("deleteRecent"), count), null, () => {
     showDeleteConfirm(node);
   });
   button.options = { ...(button.options || {}), serialize: false };
@@ -39,13 +40,13 @@ function showDeleteConfirm(node) {
     `;
     document.head.append(style);
   }
-  const targetText = count > 1 ? `最近输出的 ${count} 张图片` : "最近输出的图片";
+  const targetText = count > 1 ? t("deleteManyTarget", { count }) : t("deleteOneTarget");
   const root = document.createElement("div");
   root.className = "pw-image-delete-backdrop";
   root.innerHTML = `<div class="pw-image-delete-dialog" role="dialog" aria-modal="true">
-    <strong>确认永久删除？</strong>
-    <p>将从 ComfyUI output 目录删除${targetText}的源文件，此操作无法撤销。</p>
-    <div class="pw-image-delete-actions"><button data-cancel>取消</button><button data-confirm>删除</button></div>
+    <strong>${t("deleteTitle")}</strong>
+    <p>${t("deleteMessage", { target: targetText })}</p>
+    <div class="pw-image-delete-actions"><button data-cancel>${t("cancel")}</button><button data-confirm>${t("delete")}</button></div>
   </div>`;
   document.body.append(root);
   const close = () => root.remove();
@@ -61,7 +62,7 @@ function showDeleteConfirm(node) {
 async function deleteLastOutput(node, button) {
   const images = node._pwSavedImages || [];
   if (!images.length) return;
-  button.name = "正在删除…";
+  button.name = t("deleting");
   node.setDirtyCanvas(true, true);
   try {
     const response = await api.fetchApi("/prompt-warehouse/delete-output-images", {
@@ -70,12 +71,12 @@ async function deleteLastOutput(node, button) {
       body: JSON.stringify({ images }),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "删除失败");
+    if (!response.ok) throw new Error(result.error || t("deleteFailed"));
     node._pwSavedImages = [];
     node.imgs = [];
-    button.name = result.missing?.length ? "文件已不存在" : `已删除 ${result.deleted.length} 张图片`;
+    button.name = result.missing?.length ? t("fileMissing") : t("deletedImages", { count: result.deleted.length });
   } catch (error) {
-    button.name = `删除失败：${error.message}`;
+    button.name = `${t("deleteFailed")}: ${error.message}`;
   }
   node.setDirtyCanvas(true, true);
 }
