@@ -26,6 +26,7 @@
 - 数据持久化保存在插件目录的 `data/prompts.json`
 - 实际仓库数据不受 Git 管理，更新插件不会覆盖该文件
 - 提供 `Prompt Line / 单行提示词` 节点，用单行输入框直接输出提示词
+- 提供 `Prompt Multiline / 多行提示词` 节点，用多行输入框编辑并输出提示词
 - 提供 `Multi LoRA Loader / 多 LoRA 加载器`，可按顺序加载任意多个 LoRA
 - 每个 LoRA 可独立启停，以紧凑单行界面调整统一强度
 - LoRA 列表及 `Add LoRA` 按钮在工作流重载或重启 ComfyUI 后会自动恢复
@@ -46,6 +47,8 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 在节点菜单的 `Prompt Warehouse` 分类中添加 **Prompt Warehouse / 提示词仓库**。
 
 如需一个简单的单行提示词节点，可在同一分类中添加 **Prompt Line / 单行提示词**。节点会将左侧 `prompt_in` 接口传入的上游提示词与内部单行 `prompt` 输入框内容用 `, ` 拼接后输出，且不会覆盖输入框内容。
+
+如需更大的编辑区域，可添加 **Prompt Multiline / 多行提示词**。它与单行节点的输入、拼接和输出逻辑完全一致，区别仅在于内部 `prompt` 使用多行输入框。
 
 ### 多 LoRA 加载器
 

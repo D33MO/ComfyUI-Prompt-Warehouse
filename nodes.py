@@ -97,6 +97,33 @@ class PromptLine:
         return (_join_prompts(prompt_in, prompt),)
 
 
+class PromptMultiline:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "prompt": ("STRING", {
+                    "default": "",
+                    "multiline": True,
+                    "dynamicPrompts": False,
+                    "placeholder": "输入多行提示词…",
+                }),
+            },
+            "optional": {
+                "prompt_in": ("STRING", {"forceInput": True}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("prompt",)
+    FUNCTION = "output"
+    CATEGORY = "Prompt Warehouse"
+    DESCRIPTION = "将上游提示词与多行输入框中的提示词拼接后输出。"
+
+    def output(self, prompt, prompt_in=""):
+        return (_join_prompts(prompt_in, prompt),)
+
+
 class MultiLoraLoader:
     """Apply an ordered, workflow-persisted list of LoRAs to MODEL and CLIP."""
 
@@ -162,10 +189,12 @@ class MultiLoraLoader:
 NODE_CLASS_MAPPINGS = {
     "PromptWarehouse": PromptWarehouse,
     "PromptLine": PromptLine,
+    "PromptMultiline": PromptMultiline,
     "PromptWarehouseMultiLoraLoader": MultiLoraLoader,
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
     "PromptWarehouse": "Prompt Warehouse / 提示词仓库",
     "PromptLine": "Prompt Line / 单行提示词",
+    "PromptMultiline": "Prompt Multiline / 多行提示词",
     "PromptWarehouseMultiLoraLoader": "Multi LoRA Loader / 多 LoRA 加载器",
 }
