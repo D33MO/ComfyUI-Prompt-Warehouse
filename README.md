@@ -43,7 +43,7 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 
 ### 可删除图片保存
 
-**Save Image with Delete / 可删除图片保存** 的保存、命名和预览行为与 ComfyUI 原生 `Save Image` 一致。节点完成输出后会记录本次保存的图片，并显示“删除最近输出”按钮；第一次点击后，节点下方会增加一行“确认永久删除”，只有再次点击确认才会删除 ComfyUI `output` 目录中的对应源文件并清除节点预览。删除接口会校验路径，只允许操作 `output` 目录内由节点返回的文件信息。
+**Save Image with Delete / 可删除图片保存** 的保存、命名和预览行为与 ComfyUI 原生 `Save Image` 一致。节点完成输出后会记录本次保存的图片，并显示“删除最近输出”按钮；点击后会弹出二次确认框，确认后才会删除 ComfyUI `output` 目录中的对应源文件并清除节点预览。删除接口会校验路径，只允许操作 `output` 目录内由节点返回的文件信息。
 
 ### 多 LoRA 加载器
 
