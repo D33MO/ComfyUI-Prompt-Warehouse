@@ -2,17 +2,7 @@
 
 当前版本：`v0.2.0`
 
-一个用于整理、复用和随机抽取提示词的 ComfyUI 自定义节点。每条仓库记录包含标题、分组、多行提示词，以及可选的 Width / Height。
-
-## 界面预览
-
-### 节点
-
-![Prompt Warehouse 节点](docs/images/prompt-warehouse-node.png)
-
-### 提示词仓库
-
-![提示词仓库管理界面](docs/images/prompt-warehouse-manager.png)
+一个用于整理、复用和随机抽取提示词的 ComfyUI 自定义节点包，同时提供单行/多行提示词节点和支持工作流持久化的多 LoRA 加载器。
 
 ## 功能
 
@@ -54,7 +44,12 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 
 在 `Prompt Warehouse` 分类中添加 **Multi LoRA Loader / 多 LoRA 加载器**，连接基础模型的 `MODEL` 和 `CLIP`，再点击节点底部的 `＋ Add LoRA` 添加任意数量的 LoRA。每个 LoRA 只占一行：点击左侧圆点启停，点击名称选择文件，使用 `− / +` 或点击数值调整强度；右键该行可以启停、上移、下移或删除。LoRA 会从上到下依次应用，同一强度同时作用于 MODEL 和 CLIP。
 
-节点把完整列表保存到工作流中的固定配置控件，而不是依赖临时动态控件，因此重新启动 ComfyUI 或重新打开工作流后，已添加的 LoRA 和添加按钮都会恢复。
+该节点的简洁单行界面和主要交互模仿并参考了 [rgthree-comfy 的 Power Lora Loader](https://github.com/rgthree/rgthree-comfy)。在此基础上，本项目采用了独立实现，并做了以下调整：
+
+- 使用一个固定 JSON 配置保存完整 LoRA 列表，配置跟随当前工作流保存
+- 重新启动 ComfyUI 或重新打开工作流后，恢复 LoRA、顺序、启停状态和 `Add LoRA` 按钮
+- 使用单一强度同时作用于 MODEL 和 CLIP
+- 提供自定义强度编辑弹窗，以及适配本项目的紧凑界面
 
 ### 管理仓库
 
@@ -65,7 +60,7 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 5. 点击左侧记录后，内容会显示在右侧，可直接查看或编辑；修改内容需要再次点击“保存”才会生效。
 6. 选中记录后点击“加载”，才会将右侧显示的内容载入当前节点。
 7. 编辑已有记录时，可以点击左侧“＋ 新增”随时清空右侧并开始新建；草稿或已修改内容会显示醒目的未保存状态。
-7. 编辑记录时点击“删除”并确认，记录会立即从仓库删除，无需再次保存。
+8. 编辑记录时点击“删除”并确认，记录会立即从仓库删除，无需再次保存。
 
 ### 随机抽取
 
