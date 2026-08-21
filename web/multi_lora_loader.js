@@ -35,11 +35,15 @@ function showStrengthEditor(initialValue, onSave) {
   const input = root.querySelector("input");
   const error = root.querySelector(".pw-lora-strength-error");
   const close = () => root.remove();
+  const focusAndSelect = () => {
+    input.focus();
+    input.select();
+  };
   const save = () => {
     const value = Number(input.value);
     if (!input.value.trim() || !Number.isFinite(value)) {
       error.textContent = t("invalidNumber");
-      input.focus();
+      focusAndSelect();
       return;
     }
     onSave(value);
@@ -52,8 +56,9 @@ function showStrengthEditor(initialValue, onSave) {
     if (event.key === "Enter") save();
     if (event.key === "Escape") close();
   };
-  input.focus();
-  input.select();
+  // The canvas restores its own focus after handling the click that opens this
+  // dialog. Waiting one frame ensures the input wins and its value stays selected.
+  requestAnimationFrame(focusAndSelect);
 }
 
 function parseConfig(widget) {
