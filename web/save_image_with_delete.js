@@ -25,6 +25,30 @@ function addDeleteButton(node) {
   node.setSize([node.size[0], Math.max(node.size[1], node.computeSize()[1])]);
 }
 
+function previewMatchesOutput(node, images) {
+  const filenames = new Set(images.map((image) => String(image.filename || "")));
+  return Boolean(node.imgs?.some((image) => {
+    let source = String(image?.src || "");
+    try { source = decodeURIComponent(source); } catch (_) { /* Keep the raw URL. */ }
+    return [...filenames].some((filename) => filename && source.includes(filename));
+  }));
+}
+
+function addDeleteButtonAfterPreview(node, images, outputVersion, attempt = 0) {
+  if (node._pwOutputVersion !== outputVersion || !images.length) return;
+  if (previewMatchesOutput(node, images) || attempt >= 300) {
+    // Wait one additional frame after the matching image appears so ComfyUI has
+    // committed its preview layout before this widget is appended.
+    requestAnimationFrame(() => {
+      if (node._pwOutputVersion !== outputVersion) return;
+      addDeleteButton(node);
+      node.setDirtyCanvas(true, true);
+    });
+    return;
+  }
+  requestAnimationFrame(() => addDeleteButtonAfterPreview(node, images, outputVersion, attempt + 1));
+}
+
 function showDeleteConfirm(node) {
   const count = node._pwSavedImages?.length || 0;
   if (!count) return;
@@ -74,7 +98,8 @@ async function deleteLastOutput(node, button) {
     if (!response.ok) throw new Error(result.error || t("deleteFailed"));
     node._pwSavedImages = [];
     node.imgs = [];
-    button.name = result.missing?.length ? t("fileMissing") : t("deletedImages", { count: result.deleted.length });
+    removeWidget(node, button);
+    node._pwDeleteButton = null;
   } catch (error) {
     button.name = `${t("deleteFailed")}: ${error.message}`;
   }
@@ -99,14 +124,7 @@ app.registerExtension({
       this._pwDeleteButton = null;
       this._pwSavedImages = (message?.images || []).filter((image) => image?.type === "output");
       const outputVersion = this._pwOutputVersion = (this._pwOutputVersion || 0) + 1;
-      // ComfyUI lays out the preview after onExecuted returns. Creating the
-      // control on the next frame places it below the finished image preview.
-      requestAnimationFrame(() => {
-        if (this._pwOutputVersion === outputVersion && this._pwSavedImages.length) {
-          addDeleteButton(this);
-          this.setDirtyCanvas(true, true);
-        }
-      });
+      addDeleteButtonAfterPreview(this, this._pwSavedImages, outputVersion);
       this.setDirtyCanvas(true, true);
       return result;
     };
