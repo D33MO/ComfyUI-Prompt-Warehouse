@@ -1,6 +1,6 @@
 # ComfyUI Prompt Warehouse
 
-当前版本：`v0.3.0`
+当前版本：`v0.4.0`
 
 一个用于整理、复用和随机抽取提示词的 ComfyUI 自定义节点包，同时提供单行/多行提示词节点和支持工作流持久化的多 LoRA 加载器。
 
@@ -14,6 +14,7 @@
 - 通过左侧 `prompt_in` 接口拼接上游提示词
 - 可选接收 `clip` 输入，并输出 `prompt`、`width`、`height`、`conditioning`
 - 数据持久化保存在插件目录的 `data/prompts.json`
+- 每次保存自动备份到用户“文档”目录，并在数据丢失时自动恢复
 - 实际仓库数据不受 Git 管理，更新插件不会覆盖该文件
 - 提供 `Prompt Line / 单行提示词` 节点，用单行输入框直接输出提示词
 - 提供 `Prompt Multiline / 多行提示词` 节点，用多行输入框编辑并输出提示词
@@ -102,5 +103,15 @@ Warehouse 节点输出非空提示词时，会默认在末尾补上一个英文�
 ## 数据与备份
 
 提示词保存在 `data/prompts.json`。该文件已加入 `.gitignore`，不会进入 Git 提交；仓库中的 `data/prompts.example.json` 仅用于展示数据格式。
+
+每次保存仓库时，插件会自动把同一份数据备份到当前用户“文档”目录下的 `ComfyUI-Prompt-Warehouse\prompts.json`：
+
+```
+C:\Users\<用户名>\Documents\ComfyUI-Prompt-Warehouse\prompts.json
+```
+
+同时在 `ComfyUI-Prompt-Warehouse\backups\` 下按时间留存快照（保留最近 20 份），方便误删或误改后回退。如果 `Documents` 被重定向到 OneDrive，会优先写入 OneDrive 下的文档目录；也可以用环境变量 `PROMPT_WAREHOUSE_BACKUP_DIR` 指定其它备份位置。
+
+如果 `data/prompts.json` 丢失（重装、误删），下次加载仓库时会自动从备份恢复并重新写回 `data/prompts.json`。备份目录不可写时只会在后台忽略，不会影响保存操作。当前备份位置可通过 `GET /prompt-warehouse/backup` 或 `GET /prompt-warehouse/prompts` 返回的 `backup` 字段查看。
 
 升级插件时，常规 `git pull` 不会覆盖实际提示词。删除或重新安装整个插件目录前，请单独备份 `data/prompts.json`。

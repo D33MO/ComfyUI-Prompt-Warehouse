@@ -4,3 +4,4 @@ __pycache__/
 data/prompts.json
 data/lora_hashes.json
 tests/_out/
+tests/_tmp/

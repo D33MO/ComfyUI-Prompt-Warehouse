@@ -3,13 +3,17 @@ from pathlib import Path
 
 import folder_paths
 from server import PromptServer
-from .prompt_store import load_entries, save_entries
+from .prompt_store import backup_status, load_entries, save_entries
 
 routes = PromptServer.instance.routes
 
 @routes.get("/prompt-warehouse/prompts")
 async def get_prompts(_request):
-    return web.json_response({"entries": load_entries()})
+    return web.json_response({"entries": load_entries(), "backup": backup_status()})
+
+@routes.get("/prompt-warehouse/backup")
+async def get_backup(_request):
+    return web.json_response(backup_status())
 
 @routes.put("/prompt-warehouse/prompts")
 async def put_prompts(request):
