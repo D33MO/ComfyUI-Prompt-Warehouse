@@ -2,3 +2,5 @@ __pycache__/
 *.py[cod]
 .DS_Store
 data/prompts.json
+data/lora_hashes.json
+tests/_out/

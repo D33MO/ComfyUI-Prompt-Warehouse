@@ -1,11 +1,18 @@
+import os
 import random
 import json
+
+import numpy as np
+from PIL import Image
+from PIL.PngImagePlugin import PngInfo
 
 import comfy.sd
 import comfy.utils
 import folder_paths
+from comfy.cli_args import args
 from nodes import SaveImage as ComfySaveImage
 
+from .lora_meta import build_parameters
 from .prompt_store import load_entries
 
 def _dimension(value):
@@ -188,10 +195,46 @@ class MultiLoraLoader:
 
 
 class SaveImageWithDelete(ComfySaveImage):
-    """ComfyUI's standard Save Image with a safe post-save delete action in the UI."""
+    """ComfyUI's standard Save Image with a safe post-save delete action in the UI.
+
+    It additionally embeds an A1111-style ``parameters`` chunk so CivitAI picks up
+    the LoRAs (including the ones loaded by :class:`MultiLoraLoader`) on upload.
+    """
 
     CATEGORY = "Prompt Warehouse"
-    DESCRIPTION = "Save and preview images, then optionally delete their source files from output."
+    DESCRIPTION = "Save and preview images with CivitAI-readable LoRA metadata, then optionally delete their source files from output."
+
+    def save_images(self, images, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
+        parameters = None
+        if not args.disable_metadata:
+            try:
+                parameters = build_parameters(prompt, (images[0].shape[1], images[0].shape[0]))
+            except Exception:
+                parameters = None
+        if not parameters:
+            return super().save_images(images, filename_prefix, prompt, extra_pnginfo)
+
+        filename_prefix += self.prefix_append
+        full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
+            filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0])
+        results = []
+        for batch_number, image in enumerate(images):
+            pixels = 255. * image.cpu().numpy()
+            img = Image.fromarray(np.clip(pixels, 0, 255).astype(np.uint8))
+            metadata = PngInfo()
+            if prompt is not None:
+                metadata.add_text("prompt", json.dumps(prompt))
+            if extra_pnginfo is not None:
+                for key in extra_pnginfo:
+                    metadata.add_text(key, json.dumps(extra_pnginfo[key]))
+            metadata.add_text("parameters", parameters)
+            filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
+            file = f"{filename_with_batch_num}_{counter:05}_.png"
+            img.save(os.path.join(full_output_folder, file), pnginfo=metadata,
+                     compress_level=self.compress_level)
+            results.append({"filename": file, "subfolder": subfolder, "type": self.type})
+            counter += 1
+        return {"ui": {"images": results}, "result": (images,)}
 
 
 NODE_CLASS_MAPPINGS = {
