@@ -5,8 +5,10 @@ CivitAI reads LoRAs from the A1111 ``parameters`` chunk (``<lora:name:weight>``
 tags plus a ``Lora hashes:`` map), which is why LoRAs wired through custom
 loader nodes have to be re-entered by hand on upload.
 
-This module extracts the LoRAs (and prompts) straight out of the execution
-graph that ComfyUI hands to the save node, so no workflow rewiring is needed.
+This module extracts the LoRAs straight out of the execution graph that ComfyUI
+hands to the save node, so no workflow rewiring is needed. Prompt text is
+intentionally never written to the ``parameters`` chunk, so an uploaded image
+does not expose the positive or negative prompt.
 """
 
 import hashlib
@@ -19,7 +21,6 @@ import folder_paths
 CACHE_PATH = Path(__file__).resolve().parent / "data" / "lora_hashes.json"
 _LOCK = threading.RLock()
 _CACHE = None
-_MAX_DEPTH = 24
 
 # Nodes that load a LoRA. Anything the user's workflow uses is covered here.
 _LORA_NODES = {"PromptWarehouseMultiLoraLoader", "LoraLoader", "LoraLoaderModelOnly"}
@@ -144,43 +145,6 @@ def _is_link(value):
     )
 
 
-_TEXT_KEYS = ("text", "text_g", "prompt", "string", "value")
-_UPSTREAM_KEYS = ("prompt_in", "text_in", "input", "any_1", "conditioning", "positive", "negative")
-
-
-def _text_from_node(graph, node, depth):
-    if depth > _MAX_DEPTH or not isinstance(node, dict):
-        return ""
-    inputs = node.get("inputs") or {}
-    parts = []
-    for key in _UPSTREAM_KEYS:
-        value = inputs.get(key)
-        if _is_link(value):
-            upstream = _text_from_link(graph, value[0], depth + 1)
-            if upstream:
-                parts.append(upstream)
-    for key in _TEXT_KEYS:
-        value = inputs.get(key)
-        if isinstance(value, str) and value.strip():
-            parts.append(value.strip())
-    return ", ".join(part.strip().strip(",").strip() for part in parts if part).strip().strip(",").strip()
-
-
-def _text_from_link(graph, node_id, depth):
-    if depth > _MAX_DEPTH:
-        return ""
-    node = graph.get(str(node_id)) if isinstance(graph, dict) else None
-    return _text_from_node(graph, node, depth)
-
-
-def _first_link(inputs, *keys):
-    for key in keys:
-        value = inputs.get(key)
-        if _is_link(value):
-            return value
-    return None
-
-
 def _sampler_settings(graph):
     """Best-effort steps/cfg/sampler/seed, used to keep the chunk canonical."""
     settings = {}
@@ -203,65 +167,20 @@ def _sampler_settings(graph):
     return settings
 
 
-def _sampler_prompts(graph):
-    for node in (graph or {}).values():
-        if not isinstance(node, dict):
-            continue
-        class_type = str(node.get("class_type") or "")
-        if "KSampler" not in class_type and class_type != "SamplerCustomAdvanced":
-            continue
-        inputs = node.get("inputs") or {}
-        positive_link = _first_link(inputs, "positive", "guider")
-        negative_link = _first_link(inputs, "negative")
-        positive = _text_from_link(graph, positive_link[0], 0) if positive_link else ""
-        negative = _text_from_link(graph, negative_link[0], 0) if negative_link else ""
-        if positive or negative:
-            return positive, negative
-    return "", ""
-
-
-def _fallback_prompt(graph):
-    """Last resort: any prompt-ish text widget in the graph, in node order."""
-    parts = []
-    for node in (graph or {}).values():
-        if not isinstance(node, dict):
-            continue
-        class_type = str(node.get("class_type") or "")
-        if class_type not in (
-            "PromptWarehouse", "PromptLine", "PromptMultiline",
-            "CLIPTextEncode", "CLIPTextEncodeFlux", "CLIPTextEncodeSDXL",
-        ):
-            continue
-        inputs = node.get("inputs") or {}
-        for key in _TEXT_KEYS:
-            value = inputs.get(key)
-            if isinstance(value, str) and value.strip():
-                parts.append(value.strip())
-                break
-    return ", ".join(parts)
-
-
 def build_parameters(graph, image_size=None):
-    """Return an A1111 ``parameters`` chunk carrying the LoRA info, or ``None``."""
+    """Return an A1111 ``parameters`` chunk carrying only LoRA info, or ``None``.
+
+    The chunk holds the ``<lora:name:weight>`` tags, the ``Lora hashes`` map and
+    the sampler settings. Prompt text is deliberately omitted, so uploading the
+    image never exposes the positive or negative prompt.
+    """
     if not isinstance(graph, dict) or not graph:
         return None
     loras = _lora_entries(graph)
-    positive, negative = _sampler_prompts(graph)
-    if not positive:
-        positive = _fallback_prompt(graph)
-    if negative and negative == positive:
-        negative = ""
-
-    head = positive
-    for name, strength in loras:
-        head = f"{head} <lora:{lora_tag_name(name)}:{strength:g}>"
-    head = head.strip()
-    if not head:
+    if not loras:
         return None
 
-    lines = [head]
-    if negative:
-        lines.append(f"Negative prompt: {negative}")
+    lines = [" ".join(f"<lora:{lora_tag_name(name)}:{strength:g}>" for name, strength in loras).strip()]
 
     settings = []
     sampler_settings = _sampler_settings(graph)

@@ -199,10 +199,11 @@ class SaveImageWithDelete(ComfySaveImage):
 
     It additionally embeds an A1111-style ``parameters`` chunk so CivitAI picks up
     the LoRAs (including the ones loaded by :class:`MultiLoraLoader`) on upload.
+    That chunk never contains prompt text.
     """
 
     CATEGORY = "Prompt Warehouse"
-    DESCRIPTION = "Save and preview images with CivitAI-readable LoRA metadata, then optionally delete their source files from output."
+    DESCRIPTION = "Save and preview images with CivitAI-readable LoRA metadata (no prompt text), then optionally delete their source files from output."
 
     def save_images(self, images, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
         parameters = None

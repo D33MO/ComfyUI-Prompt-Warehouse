@@ -77,9 +77,8 @@ check("prompt chunk preserved", "PromptWarehouseMultiLoraLoader" in chunks.get("
 check("workflow chunk preserved", "workflow" in chunks)
 check("lora tag", "<lora:Z-xhs888:0.8>" in parameters)
 check("lora hash", 'Lora hashes: "Z-xhs888: bdff5f135b08"' in parameters)
-check("prompt text", parameters.startswith("1girl, solo"))
+check("no prompt text", "1girl" not in parameters and "Negative prompt" not in parameters)
 check("size from image", f"Size: {size[0]}x{size[1]}" in parameters)
-check("duplicate negative dropped", "Negative prompt" not in parameters)
 
 print()
 print("FAILURES:", failures or "none")
