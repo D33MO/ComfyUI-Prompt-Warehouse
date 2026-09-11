@@ -4,7 +4,7 @@
     "description": "Manage, select, or randomly choose grouped prompts with optional dimensions.",
     "inputs": {
       "prompt": { "name": "Prompt" }, "width": { "name": "Width" }, "height": { "name": "Height" },
-      "random_group": { "name": "Random group", "options": { "全部": "All" } },
+      "random_group": { "name": "Random group", "options": { "All": "All", "全部": "All" } },
       "random_enabled": { "name": "Random enabled" }, "prompt_in": { "name": "Prompt input" }, "clip": { "name": "CLIP" }
     },
     "outputs": { "0": { "name": "Prompt" }, "1": { "name": "Width" }, "2": { "name": "Height" }, "3": { "name": "Conditioning" } }

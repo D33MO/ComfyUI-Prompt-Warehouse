@@ -79,19 +79,19 @@ def _clean_dimension(value):
     try:
         number = int(value)
     except (TypeError, ValueError) as exc:
-        raise ValueError("width 和 height 必须是正整数或留空") from exc
+        raise ValueError("width and height must be positive integers or left empty") from exc
     if number <= 0:
-        raise ValueError("width 和 height 必须是正整数或留空")
+        raise ValueError("width and height must be positive integers or left empty")
     return number
 
 def _clean_entry(raw):
     title = str(raw.get("title", "")).strip()
     prompt = str(raw.get("prompt", "")).strip()
-    group = str(raw.get("group", "基础提示词")).strip() or "未分组"
+    group = str(raw.get("group", "General")).strip() or "Ungrouped"
     if not title:
-        raise ValueError("标题不能为空")
+        raise ValueError("A title is required")
     if not prompt:
-        raise ValueError("提示词不能为空")
+        raise ValueError("A prompt is required")
     return {"id": str(raw.get("id") or uuid.uuid4()), "title": title, "prompt": prompt,
             "group": group, "width": _clean_dimension(raw.get("width")),
             "height": _clean_dimension(raw.get("height"))}
@@ -113,13 +113,15 @@ def _parse_entries(path):
 
 def load_entries():
     with _LOCK:
-        if STORE_PATH.exists():
-            return _parse_entries(STORE_PATH) or []
-        # The warehouse file is missing (fresh install or accidental delete):
-        # restore it from the Documents backup instead of silently starting empty.
+        entries = _parse_entries(STORE_PATH) if STORE_PATH.exists() else None
+        if entries:
+            return entries
+        # The warehouse file is missing, empty (fresh install ships an empty
+        # array), or unreadable: restore it from the Documents backup instead of
+        # silently starting empty.
         restored = _parse_entries(backup_path())
         if not restored:
-            return []
+            return entries or []
         try:
             DATA_DIR.mkdir(parents=True, exist_ok=True)
             STORE_PATH.write_text(json.dumps(restored, ensure_ascii=False, indent=2) + "\n",
@@ -130,11 +132,11 @@ def load_entries():
 
 def save_entries(raw_entries):
     if not isinstance(raw_entries, list):
-        raise ValueError("仓库数据必须是列表")
+        raise ValueError("Warehouse data must be a list")
     entries = [_clean_entry(item) for item in raw_entries]
     ids = [item["id"] for item in entries]
     if len(ids) != len(set(ids)):
-        raise ValueError("提示词 ID 不能重复")
+        raise ValueError("Prompt IDs must be unique")
     payload = json.dumps(entries, ensure_ascii=False, indent=2) + "\n"
     with _LOCK:
         DATA_DIR.mkdir(parents=True, exist_ok=True)

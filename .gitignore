@@ -5,3 +5,4 @@ data/prompts.json
 data/lora_hashes.json
 tests/_out/
 tests/_tmp/
+tests/_tmp_routes/

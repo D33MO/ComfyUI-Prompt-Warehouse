@@ -15,6 +15,12 @@ from nodes import SaveImage as ComfySaveImage
 from .lora_meta import build_parameters
 from .prompt_store import load_entries
 
+# Canonical value of the `random_group` widget that means "use every group".
+# Workflows saved before v0.4.1 stored the Chinese label instead; it is still
+# accepted so existing graphs keep the same behaviour.
+ALL_GROUPS = "All"
+LEGACY_ALL_GROUPS = "全部"
+
 def _dimension(value):
     try:
         number = int(str(value).strip())
@@ -40,7 +46,7 @@ class PromptWarehouse:
                                         "placeholder": "Enter a prompt or load one from the warehouse…"}),
                 "width": ("STRING", {"default": "", "placeholder": "Not set"}),
                 "height": ("STRING", {"default": "", "placeholder": "Not set"}),
-                "random_group": (["全部", *groups], {"default": "全部"}),
+                "random_group": ([ALL_GROUPS, *groups], {"default": ALL_GROUPS}),
                 "random_enabled": ("BOOLEAN", {"default": False, "label_on": "On", "label_off": "Off"}),
             },
             "optional": {
@@ -66,7 +72,7 @@ class PromptWarehouse:
         if random_enabled:
             entries = load_entries()
             group = random_group.strip()
-            if group and group != "全部":
+            if group and group not in (ALL_GROUPS, LEGACY_ALL_GROUPS):
                 entries = [item for item in entries if item["group"] == group]
             if entries:
                 selected = random.choice(entries)
@@ -172,9 +178,9 @@ class MultiLoraLoader:
         try:
             entries = json.loads(lora_config or "[]")
         except (TypeError, json.JSONDecodeError) as error:
-            raise ValueError(f"LoRA 配置不是有效的 JSON: {error}") from error
+            raise ValueError(f"LoRA configuration is not valid JSON: {error}") from error
         if not isinstance(entries, list):
-            raise ValueError("LoRA 配置必须是一个列表")
+            raise ValueError("LoRA configuration must be a list")
 
         available = set(folder_paths.get_filename_list("loras"))
         for entry in entries:
@@ -184,7 +190,7 @@ class MultiLoraLoader:
             if not name:
                 continue
             if name not in available:
-                raise ValueError(f"找不到 LoRA: {name}")
+                raise ValueError(f"LoRA not found: {name}")
             strength = float(entry.get("strength", entry.get("strength_model", 1.0)))
             if strength == 0:
                 continue

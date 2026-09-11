@@ -1,6 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
-import { t } from "./i18n.js";
+import { ALL_GROUPS, groupChoice, groupLabel, t } from "./i18n.js";
 
 const NODE_NAME = "PromptWarehouse";
 const EMPTY_DRAFT = () => ({
@@ -51,7 +51,7 @@ async function openWarehouse(node) {
   const data = await response.json();
   let entries = data.entries || [];
   let editingId = null;
-  let filterGroup = t("allGroups");
+  let filterGroup = ALL_GROUPS;
 
   const root = document.createElement("div");
   root.className = "pw-backdrop";
@@ -72,8 +72,8 @@ async function openWarehouse(node) {
           <div class="pw-field"><label>${t("title")}</label><input data-title placeholder="${t("titlePlaceholder")}"></div>
           <div class="pw-field"><label>${t("group")}</label><div class="pw-combobox" data-group-combo><input data-group role="combobox" aria-expanded="false" autocomplete="off" placeholder="${t("groupPlaceholder")}"><button class="pw-combo-toggle" data-group-toggle type="button" tabindex="-1" aria-label="${t("showGroups")}">▼</button><div class="pw-group-menu" data-groups role="listbox" hidden></div></div></div>
           <div class="pw-field full"><label>${t("prompt")}</label><textarea data-prompt placeholder="${t("promptPlaceholder")}"></textarea></div>
-          <div class="pw-field"><label>Width (${t("optional")})</label><input data-width type="number" min="1" placeholder="${t("unset")}"></div>
-          <div class="pw-field"><label>Height (${t("optional")})</label><input data-height type="number" min="1" placeholder="${t("unset")}"></div>
+          <div class="pw-field"><label>${t("width")} (${t("optional")})</label><input data-width type="number" min="1" placeholder="${t("unset")}"></div>
+          <div class="pw-field"><label>${t("height")} (${t("optional")})</label><input data-height type="number" min="1" placeholder="${t("unset")}"></div>
         </div>
         <div class="pw-status" data-status>${t("notSaved")}</div>
         <div class="pw-actions">
@@ -110,15 +110,15 @@ async function openWarehouse(node) {
     query("[data-groups]").innerHTML = matchingGroups.length
       ? matchingGroups.map((group) => `<button class="pw-group-option" type="button" role="option" data-group-option="${escapeHtml(group)}">${escapeHtml(group)}</button>`).join("")
       : `<div class="pw-group-empty">${t("noGroupMatch")}</div>`;
-    if (filterGroup !== t("allGroups") && !groups.includes(filterGroup)) filterGroup = t("allGroups");
-    query("[data-filter]").innerHTML = [t("allGroups"), ...groups]
-      .map((group) => `<option value="${escapeHtml(group)}" ${group === filterGroup ? "selected" : ""}>${escapeHtml(group)}</option>`)
+    if (filterGroup !== ALL_GROUPS && !groups.includes(filterGroup)) filterGroup = ALL_GROUPS;
+    query("[data-filter]").innerHTML = [ALL_GROUPS, ...groups]
+      .map((group) => `<option value="${escapeHtml(group)}" ${group === filterGroup ? "selected" : ""}>${escapeHtml(groupLabel(group))}</option>`)
       .join("");
   }
 
   function renderList() {
     renderGroups();
-    const visibleEntries = filterGroup === t("allGroups")
+    const visibleEntries = filterGroup === ALL_GROUPS
       ? entries
       : entries.filter((entry) => entry.group === filterGroup);
     query("[data-list]").innerHTML = visibleEntries.length
@@ -159,10 +159,11 @@ async function openWarehouse(node) {
     widget(node, "width").value = entry.width ? String(entry.width) : "";
     widget(node, "height").value = entry.height ? String(entry.height) : "";
     const groupWidget = widget(node, "random_group");
-    if (groupWidget?.options && !groupWidget.options.values.includes(entry.group)) {
-      groupWidget.options.values.push(entry.group);
+    const group = groupChoice(entry.group);
+    if (groupWidget?.options && !groupWidget.options.values.includes(group)) {
+      groupWidget.options.values.push(group);
     }
-    groupWidget.value = entry.group;
+    groupWidget.value = group;
     node.setDirtyCanvas(true, true);
     query("[data-status]").textContent = t("loadedNode", { title: entry.title });
   }
@@ -184,7 +185,7 @@ async function openWarehouse(node) {
       entries = body.entries;
       const groupWidget = widget(node, "random_group");
       if (groupWidget?.options) {
-        groupWidget.options.values = ["全部", ...new Set(entries.map((entry) => entry.group).sort())];
+        groupWidget.options.values = [ALL_GROUPS, ...new Set(entries.map((entry) => entry.group).sort())];
       }
       beginNew();
       status.textContent = successMessage;
@@ -273,6 +274,15 @@ app.registerExtension({
     const created = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function () {
       const result = created?.apply(this, arguments);
+      const groupWidget = this.widgets?.find((item) => item.name === "random_group");
+      if (groupWidget?.options) {
+        // ComfyUI translates node input *names* from locales/*/nodeDefs.json, but it
+        // never applies the `options` map declared there. A canvas combo widget only
+        // localizes through `options.getOptionLabel` (or an object-shaped
+        // `options.values`), so install it ourselves: the stored value stays the
+        // canonical "All" for workflow compatibility while the label becomes "全部".
+        groupWidget.options.getOptionLabel = (value) => (value ? groupLabel(value) : "");
+      }
       const randomIndex = this.widgets?.findIndex((item) => item.name === "random_group") ?? -1;
       if (randomIndex >= 0) {
         this.widgets.splice(randomIndex, 0, {

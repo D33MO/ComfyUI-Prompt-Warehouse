@@ -4,7 +4,7 @@
     "description": "管理、选择或按分组随机抽取提示词及其可选尺寸。",
     "inputs": {
       "prompt": { "name": "提示词" }, "width": { "name": "宽度" }, "height": { "name": "高度" },
-      "random_group": { "name": "随机分组", "options": { "全部": "全部" } },
+      "random_group": { "name": "随机分组", "options": { "All": "全部", "全部": "全部" } },
       "random_enabled": { "name": "启用随机" }, "prompt_in": { "name": "提示词输入" }, "clip": { "name": "CLIP" }
     },
     "outputs": { "0": { "name": "提示词" }, "1": { "name": "宽度" }, "2": { "name": "高度" }, "3": { "name": "条件" } }

@@ -1,117 +1,136 @@
 # ComfyUI Prompt Warehouse
 
-当前版本：`v0.4.0`
+[![English](https://img.shields.io/badge/README-English-2f81f7?style=for-the-badge)](README.md)
+[![简体中文](https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-e34c26?style=for-the-badge)](README.zh-CN.md)
 
-一个用于整理、复用和随机抽取提示词的 ComfyUI 自定义节点包，同时提供单行/多行提示词节点和支持工作流持久化的多 LoRA 加载器。
+Current version: `v0.4.0`
 
-## 功能
+A ComfyUI custom node pack for organising, reusing and randomly drawing prompts, bundled with single-line and multiline prompt nodes and a multi-LoRA loader whose list is persisted with the workflow.
 
-- 新增、编辑、删除提示词记录
-- 自定义分组，并在左侧列表按分组筛选
-- 分组输入支持已有候选，也可以直接创建新分组
-- 按指定分组或全部记录随机抽取
-- 随机抽取时，Prompt、Width 和 Height 保持配套
-- 通过左侧 `prompt_in` 接口拼接上游提示词
-- 可选接收 `clip` 输入，并输出 `prompt`、`width`、`height`、`conditioning`
-- 数据持久化保存在插件目录的 `data/prompts.json`
-- 每次保存自动备份到用户“文档”目录，并在数据丢失时自动恢复
-- 实际仓库数据不受 Git 管理，更新插件不会覆盖该文件
-- 提供 `Prompt Line / 单行提示词` 节点，用单行输入框直接输出提示词
-- 提供 `Prompt Multiline / 多行提示词` 节点，用多行输入框编辑并输出提示词
-- 提供 `Multi LoRA Loader / 多 LoRA 加载器`，可按顺序加载任意多个 LoRA
-- 每个 LoRA 可独立启停，以紧凑单行界面调整统一强度
-- LoRA 列表及 `Add LoRA` 按钮在工作流重载或重启 ComfyUI 后会自动恢复
-- 提供 `Save Image with Delete / 可删除图片保存`，保存预览后可删除 output 中的对应源文件
-- 保存的 PNG 会附带 CivitAI 可识别的 LoRA 元数据，上传后自动关联 LoRA 资源
-- 根据 ComfyUI 的 `Comfy → Locale` 设置自动切换简体中文或英文节点界面
+## Features
 
-## 安装
+- Add, edit and delete prompt entries
+- Free-form groups, with filtering by group in the list on the left
+- The group field suggests existing groups but still lets you create new ones
+- Random draw from a chosen group, or from every entry
+- Prompt, Width and Height are drawn as a matched set
+- Join an upstream prompt through the `prompt_in` input on the left
+- Optional `clip` input, with `prompt`, `width`, `height` and `conditioning` outputs
+- Data is persisted in `data/prompts.json` inside the plugin folder
+- Every save is mirrored to the user's Documents folder, and a missing, empty or corrupt main file is restored from it automatically
+- The real warehouse data is not tracked by Git, so updating the plugin never overwrites that file
+- Ships a **Prompt Line** node that outputs a prompt typed into a single-line box
+- Ships a **Prompt Multiline** node that edits a prompt in a multiline box
+- Ships a **Multi LoRA Loader** that applies any number of LoRAs in order
+- Each LoRA can be toggled on or off independently, with a shared strength on a compact single row
+- The LoRA list and its `Add LoRA` button survive a workflow reload or a ComfyUI restart
+- Ships a **Save Image with Delete** node that can delete the saved source file from `output`
+- Saved PNGs carry CivitAI-readable LoRA metadata, so uploads link back to the LoRA resources automatically
+- The interface is English by default; setting ComfyUI's `Comfy → Locale` to 简体中文 switches the node UI too. It does not follow the browser language.
 
-进入 ComfyUI 的自定义节点目录并克隆仓库：
+## Installation
+
+Change into ComfyUI's custom nodes directory and clone the repository:
 
 ```bash
 cd ComfyUI/custom_nodes
 git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 ```
 
-重启 ComfyUI，然后刷新浏览器页面。插件没有第三方 Python 依赖。
+Restart ComfyUI, then refresh the browser page. The plugin has no third-party Python dependencies.
 
-## 使用
+## Usage
 
-在节点菜单的 `Prompt Warehouse` 分类中添加 **Prompt Warehouse / 提示词仓库**。
+Add **Prompt Warehouse** from the `Prompt Warehouse` category in the node menu.
 
-如需一个简单的单行提示词节点，可在同一分类中添加 **Prompt Line / 单行提示词**。节点会将左侧 `prompt_in` 接口传入的上游提示词与内部单行 `prompt` 输入框内容用 `, ` 拼接后输出，且不会覆盖输入框内容。
+For a simple single-line prompt node, add **Prompt Line** from the same category. It joins the upstream prompt arriving on the `prompt_in` input with the contents of its own single-line `prompt` box using `, ` and outputs the result, without overwriting the input box.
 
-如需更大的编辑区域，可添加 **Prompt Multiline / 多行提示词**。它与单行节点的输入、拼接和输出逻辑完全一致，区别仅在于内部 `prompt` 使用多行输入框。
+For a larger editing area, add **Prompt Multiline**. Its inputs, joining and output behave exactly like the single-line node; only the internal `prompt` box is multiline.
 
-### 可删除图片保存
+### Save Image with Delete
 
-**Save Image with Delete / 可删除图片保存** 的保存、命名和预览行为与 ComfyUI 原生 `Save Image` 一致。节点完成输出后会记录本次保存的图片，并显示“删除最近输出”按钮；点击后会弹出二次确认框，确认后才会删除 ComfyUI `output` 目录中的对应源文件并清除节点预览。删除接口会校验路径，只允许操作 `output` 目录内由节点返回的文件信息。
+**Save Image with Delete** saves, names and previews images exactly like ComfyUI's built-in `Save Image`. After the node has produced its output it remembers the images it just saved and shows a "delete latest output" button; clicking it opens a confirmation prompt, and only after confirming does it delete the corresponding source files from ComfyUI's `output` directory and clear the node preview. The delete endpoint validates the path and only accepts file information for files inside the `output` directory that were returned by the node.
 
-保存时除了原生 `prompt` 和 `workflow` 元数据，还会额外写入 A1111 格式的 `parameters` 字段，把本次执行实际使用的 LoRA 以 `<lora:名称:强度>` 形式附在正向提示词末尾，并附带 `Lora hashes`（LoRA 文件 SHA256 的前 12 位，即 CivitAI 的 AutoV2 值）。这样把图片上传到 CivitAI 时可以自动识别并关联 LoRA 资源，不需要手动逐个填写。LoRA 信息直接从执行图中读取，`Multi LoRA Loader` 的列表也能被正确识别，工作流无需额外连线。
+Besides the native `prompt` and `workflow` metadata, saving also writes an A1111-style `parameters` field, appending the LoRAs actually used by this run to the end of the positive prompt as `<lora:name:strength>` and adding a `Lora hashes` line (the first 12 characters of the LoRA file's SHA256, which is CivitAI's AutoV2 value). Uploading such an image to CivitAI therefore detects and links the LoRA resources automatically, with no manual entry. LoRA information is read straight from the execution graph, so a `Multi LoRA Loader` list is recognised correctly and the workflow needs no extra wiring.
 
-哈希结果按文件路径、大小和修改时间缓存在 `data/lora_hashes.json`，同一个 LoRA 只会计算一次；节点异常时会自动退回原生保存行为，不影响出图。
+Hashes are cached in `data/lora_hashes.json` keyed by file path, size and modification time, so each LoRA is hashed only once. If the node fails for any reason it falls back to the native save behaviour, so image generation is never blocked.
 
-### 多 LoRA 加载器
+### Multi LoRA Loader
 
-在 `Prompt Warehouse` 分类中添加 **Multi LoRA Loader / 多 LoRA 加载器**，连接基础模型的 `MODEL` 和 `CLIP`，再点击节点底部的 `＋ Add LoRA` 添加任意数量的 LoRA。每个 LoRA 只占一行：点击左侧圆点启停，点击名称选择文件，使用 `− / +` 或点击数值调整强度；右键该行可以启停、上移、下移或删除。LoRA 会从上到下依次应用，同一强度同时作用于 MODEL 和 CLIP。
+Add **Multi LoRA Loader** from the `Prompt Warehouse` category, connect the base model's `MODEL` and `CLIP`, then click `＋ Add LoRA` at the bottom of the node to add any number of LoRAs. Each LoRA takes a single row: click the dot on the left to enable or disable it, click the name to pick a file, and use `− / +` or click the number to adjust strength; right-click a row to toggle, move up, move down or delete it. LoRAs are applied from top to bottom, and one strength applies to both MODEL and CLIP.
 
-该节点的简洁单行界面和主要交互模仿并参考了 [rgthree-comfy 的 Power Lora Loader](https://github.com/rgthree/rgthree-comfy)。在此基础上，本项目采用了独立实现，并做了以下调整：
+The compact single-row UI and the main interactions are modelled on and inspired by [Power Lora Loader from rgthree-comfy](https://github.com/rgthree/rgthree-comfy). This project is an independent implementation built on that idea, with these differences:
 
-- 使用一个固定 JSON 配置保存完整 LoRA 列表，配置跟随当前工作流保存
-- 重新启动 ComfyUI 或重新打开工作流后，恢复 LoRA、顺序、启停状态和 `Add LoRA` 按钮
-- 使用单一强度同时作用于 MODEL 和 CLIP
-- 提供自定义强度编辑弹窗，以及适配本项目的紧凑界面
+- The complete LoRA list is stored in one fixed JSON configuration that is saved with the current workflow
+- Restarting ComfyUI or reopening the workflow restores the LoRAs, their order, their enabled state and the `Add LoRA` button
+- A single strength applies to both MODEL and CLIP
+- A custom strength editing dialog and a UI tuned to this project's compact layout
 
-### 管理仓库
+### Managing the warehouse
 
-1. 点击节点上的“打开仓库”。
-2. 右侧默认是尚未保存的新增草稿。
-3. 填写标题、分组、提示词，以及可选的 Width / Height。
-4. 点击“保存”后，记录才会写入仓库。
-5. 点击左侧记录后，内容会显示在右侧，可直接查看或编辑；修改内容需要再次点击“保存”才会生效。
-6. 选中记录后点击“加载”，才会将右侧显示的内容载入当前节点。
-7. 编辑已有记录时，可以点击左侧“＋ 新增”随时清空右侧并开始新建；草稿或已修改内容会显示醒目的未保存状态。
-8. 编辑记录时点击“删除”并确认，记录会立即从仓库删除，无需再次保存。
+1. Click "open warehouse" on the node.
+2. The right-hand side starts as an unsaved draft for a new entry.
+3. Fill in the title, group, prompt and the optional Width / Height.
+4. The entry is written to the warehouse only after you click "save".
+5. Clicking an entry on the left shows its contents on the right, where you can read or edit it; edits take effect only after you click "save" again.
+6. The content shown on the right is loaded into the current node only when you select an entry and click "load".
+7. While editing an existing entry you can click "＋ new" on the left at any time to clear the right-hand side and start a new entry; drafts and modified content are flagged with a prominent unsaved state.
+8. Clicking "delete" while editing an entry and confirming removes it from the warehouse immediately, with no second save needed.
 
-### 随机抽取
+### Random draw
 
-开启 `random_enabled` 后，每次执行节点都会从 `random_group` 对应的仓库分组中重新随机抽取一条记录。选择“全部”时从所有记录中抽取。
+With `random_enabled` turned on, every execution of the node draws a fresh random entry from the warehouse group selected in `random_group`. Selecting "all" draws from every entry.
 
-如果一个分组中只有一条记录，随机结果始终是该记录；存在多条记录时，连续两次仍可能随机到相同内容。
+If a group holds only one entry, that entry is always the result; with several entries, two consecutive runs can still draw the same content.
 
-### 拼接提示词
+### Joining prompts
 
-将上游字符串连接到节点左侧的 `prompt_in`。节点会把上游提示词放在前面，将当前或随机抽取的提示词放在后面，并用 `, ` 自动拼接。
+Connect an upstream string to the node's `prompt_in` input on the left. The node places the upstream prompt first and the current or randomly drawn prompt after it, joining them automatically with `, `.
 
-Warehouse 节点输出非空提示词时，会默认在末尾补上一个英文逗号 `,`，方便继续拼接下游提示词。
+When the Warehouse node outputs a non-empty prompt it appends an English comma `,` by default, making it easy to keep chaining prompts downstream.
 
-### 连接 ComfyUI
+### Wiring into ComfyUI
 
 - `prompt` → `CLIP Text Encode.text`
 - `width` → `Empty Latent Image.width`
 - `height` → `Empty Latent Image.height`
-- `clip` ← 模型加载器的 `CLIP` 输出
-- `conditioning` → 采样器的正面或负面条件输入
+- `clip` ← the `CLIP` output of a model loader
+- `conditioning` → the positive or negative conditioning input of a sampler
 
-`clip` 不连接时不进行编码，原有的 `prompt`、`width` 和 `height` 输出仍可正常使用。
+When `clip` is not connected no encoding takes place, and the existing `prompt`, `width` and `height` outputs still work normally.
 
-如果 `CLIP Text Encode` 的 `text` 仍显示为输入框，请右键该输入框并选择 **Convert widget to input**。
+If `CLIP Text Encode`'s `text` still shows as a widget, right-click that widget and choose **Convert widget to input**.
 
-未填写 Width 或 Height 时，对应输出为 `0`，可由下游节点决定默认尺寸。
+When Width or Height is left empty the corresponding output is `0`, letting downstream nodes decide the default size.
 
-## 数据与备份
+## API access restriction
 
-提示词保存在 `data/prompts.json`。该文件已加入 `.gitignore`，不会进入 Git 提交；仓库中的 `data/prompts.example.json` 仅用于展示数据格式。
+The plugin exposes the following endpoints through ComfyUI's built-in HTTP server. They read and write the prompt warehouse and delete files from the `output` directory:
 
-每次保存仓库时，插件会自动把同一份数据备份到当前用户“文档”目录下的 `ComfyUI-Prompt-Warehouse\prompts.json`：
+- `GET /prompt-warehouse/prompts`, `GET /prompt-warehouse/backup`
+- `PUT /prompt-warehouse/prompts`
+- `POST /prompt-warehouse/delete-output-images`
+
+ComfyUI's API itself has no authentication, so once it is started with `--listen` any device on the local network can reach it. These endpoints therefore **only accept requests from the local machine (loopback address)** and return `403` to every other source.
+
+> Behind a reverse proxy such as nginx the request looks local to ComfyUI, so this restriction does not apply. Restrict access to the `/prompt-warehouse/` path in the proxy layer yourself.
+
+## Data and backup
+
+Prompts are stored in `data/prompts.json`. That file is listed in `.gitignore` and never enters a Git commit; the `data/prompts.example.json` in the repository only demonstrates the data format.
+
+On every warehouse save the plugin automatically backs the same data up to `ComfyUI-Prompt-Warehouse\prompts.json` inside the current user's Documents folder:
 
 ```
-C:\Users\<用户名>\Documents\ComfyUI-Prompt-Warehouse\prompts.json
+C:\Users\<username>\Documents\ComfyUI-Prompt-Warehouse\prompts.json
 ```
 
-同时在 `ComfyUI-Prompt-Warehouse\backups\` 下按时间留存快照（保留最近 20 份），方便误删或误改后回退。如果 `Documents` 被重定向到 OneDrive，会优先写入 OneDrive 下的文档目录；也可以用环境变量 `PROMPT_WAREHOUSE_BACKUP_DIR` 指定其它备份位置。
+It also keeps timestamped snapshots under `ComfyUI-Prompt-Warehouse\backups\` (the 20 most recent are retained) so you can roll back an accidental deletion or edit. If `Documents` is redirected to OneDrive, the OneDrive Documents folder is preferred; the environment variable `PROMPT_WAREHOUSE_BACKUP_DIR` can point the backup somewhere else.
 
-如果 `data/prompts.json` 丢失（重装、误删），下次加载仓库时会自动从备份恢复并重新写回 `data/prompts.json`。备份目录不可写时只会在后台忽略，不会影响保存操作。当前备份位置可通过 `GET /prompt-warehouse/backup` 或 `GET /prompt-warehouse/prompts` 返回的 `backup` 字段查看。
+If `data/prompts.json` is **missing (reinstall, accidental delete), empty (a default installation ships an empty `[]` array), or unparseable**, the next load restores it from the backup and writes it back to `data/prompts.json`. It only writes back when the backup actually holds content, so a restore can never leave you worse off. Conversely, when the main file does hold valid data it wins, and the backup is never used to overwrite it.
 
-升级插件时，常规 `git pull` 不会覆盖实际提示词。删除或重新安装整个插件目录前，请单独备份 `data/prompts.json`。
+Note that clearing every prompt in the UI and saving also writes the empty payload to the backup, so nothing is restored afterwards. That is deliberate: deleted content must not reappear on its own. If the backup folder is not writable, failures are ignored in the background and saving is unaffected. The current backup location is reported by `GET /prompt-warehouse/backup`, or by the `backup` field returned from `GET /prompt-warehouse/prompts`.
+
+The timestamped snapshots under `backups\` are kept for retention only and are never read automatically; to roll back to an earlier version, copy one over `data/prompts.json` by hand.
+
+A routine `git pull` never overwrites your actual prompts when you upgrade the plugin. Before deleting or reinstalling the whole plugin directory, back up `data/prompts.json` separately.

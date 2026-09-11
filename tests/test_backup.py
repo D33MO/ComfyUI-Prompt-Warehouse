@@ -32,7 +32,8 @@ def check(label, condition, detail=""):
 
 
 entries = [
-    {"id": "a", "title": "T1", "prompt": "1girl, solo", "group": "基础提示词", "width": 832, "height": 1216},
+    # Group names are free-form user data, so Chinese values stay valid here.
+    {"id": "a", "title": "T1", "prompt": "1girl, solo", "group": "General", "width": 832, "height": 1216},
     {"id": "b", "title": "T2", "prompt": "风景", "group": "风景"},
 ]
 saved = store.save_entries(entries)
@@ -50,6 +51,23 @@ store.STORE_PATH.unlink()
 restored = store.load_entries()
 check("restores from backup", [item["id"] for item in restored] == ["a", "b"])
 check("restored file recreated", store.STORE_PATH.is_file())
+
+# An existing but empty main file (the shape shipped by default) must restore too.
+store.STORE_PATH.write_text("[]\n", encoding="utf-8")
+check("restores when main file is empty",
+      [item["id"] for item in store.load_entries()] == ["a", "b"])
+check("empty main file rewritten", json.loads(store.STORE_PATH.read_text(encoding="utf-8")) != [])
+
+# A corrupt main file must not silently wipe the warehouse either.
+store.STORE_PATH.write_text("{ not json", encoding="utf-8")
+check("restores when main file is corrupt",
+      [item["id"] for item in store.load_entries()] == ["a", "b"])
+
+# Deliberately clearing the warehouse must stay cleared: saving writes the empty
+# payload to the backup as well, so nothing is resurrected on the next load.
+store.save_entries([])
+check("intentionally cleared warehouse stays cleared", store.load_entries() == [])
+store.save_entries(entries)
 
 # Missing both -> empty, no crash.
 store.STORE_PATH.unlink()

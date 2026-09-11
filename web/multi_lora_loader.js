@@ -25,7 +25,7 @@ function showStrengthEditor(initialValue, onSave) {
   const root = document.createElement("div");
   root.className = "pw-lora-strength-backdrop";
   root.innerHTML = `
-    <div class="pw-lora-strength-dialog" role="dialog" aria-modal="true" aria-label="LoRA strength">
+    <div class="pw-lora-strength-dialog" role="dialog" aria-modal="true" aria-label="${t("strength")}">
       <label>${t("strength")}</label>
       <input type="number" step="0.05" inputmode="decimal" value="${Number(initialValue)}">
       <div class="pw-lora-strength-error"></div>
