@@ -51,7 +51,9 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 
 **Save Image with Delete / 可删除图片保存** 的保存、命名和预览行为与 ComfyUI 原生 `Save Image` 一致。节点完成输出后会记录本次保存的图片，并显示“删除最近输出”按钮；点击后会弹出二次确认框，确认后才会删除 ComfyUI `output` 目录中的对应源文件并清除节点预览。删除接口会校验路径，只允许操作 `output` 目录内由节点返回的文件信息。
 
-保存时除了原生 `prompt` 和 `workflow` 元数据，还会额外写入 A1111 格式的 `parameters` 字段，把本次执行实际使用的 LoRA 以 `<lora:名称:强度>` 形式附在正向提示词末尾，并附带 `Lora hashes`（LoRA 文件 SHA256 的前 12 位，即 CivitAI 的 AutoV2 值）。这样把图片上传到 CivitAI 时可以自动识别并关联 LoRA 资源，不需要手动逐个填写。LoRA 信息直接从执行图中读取，`Multi LoRA Loader` 的列表也能被正确识别，工作流无需额外连线。
+保存时除了原生 `prompt` 和 `workflow` 元数据，还会额外写入 A1111 格式的 `parameters` 字段，把本次执行实际使用的 LoRA 以 `<lora:名称:强度>` 形式写入，并附带 `Lora hashes`（LoRA 文件 SHA256 的前 12 位，即 CivitAI 的 AutoV2 值）。这样把图片上传到 CivitAI 时可以自动识别并关联 LoRA 资源，不需要手动逐个填写。LoRA 信息直接从执行图中读取，`Multi LoRA Loader` 的列表也能被正确识别，工作流无需额外连线。
+
+`parameters` 字段只包含 LoRA 信息和采样参数，**不会写入正向或负向提示词**，因此上传的图片不会暴露你的提示词内容。图中没有任何 LoRA 时不会写入该字段。
 
 哈希结果按文件路径、大小和修改时间缓存在 `data/lora_hashes.json`，同一个 LoRA 只会计算一次；节点异常时会自动退回原生保存行为，不影响出图。
 
