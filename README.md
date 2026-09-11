@@ -3,7 +3,7 @@
 [![English](https://img.shields.io/badge/README-English-2f81f7?style=for-the-badge)](README.md)
 [![简体中文](https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-e34c26?style=for-the-badge)](README.zh-CN.md)
 
-Current version: `v0.4.0`
+Current version: `v0.4.1`
 
 A ComfyUI custom node pack for organising, reusing and randomly drawing prompts, bundled with single-line and multiline prompt nodes and a multi-LoRA loader whose list is persisted with the workflow.
 

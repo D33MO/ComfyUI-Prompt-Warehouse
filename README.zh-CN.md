@@ -3,7 +3,7 @@
 [![English](https://img.shields.io/badge/README-English-2f81f7?style=for-the-badge)](README.md)
 [![简体中文](https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-e34c26?style=for-the-badge)](README.zh-CN.md)
 
-当前版本：`v0.4.0`
+当前版本：`v0.4.1`
 
 一个用于整理、复用和随机抽取提示词的 ComfyUI 自定义节点包，同时提供单行/多行提示词节点和支持工作流持久化的多 LoRA 加载器。
 
