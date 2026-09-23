@@ -3,6 +3,43 @@ import { api } from "../../scripts/api.js";
 import { t } from "./i18n.js";
 
 const NODE_NAME = "PromptWarehouseSaveImageWithDelete";
+const DELETE_PATH = "/prompt-warehouse/delete-output-images";
+const SESSION_PATH = "/prompt-warehouse/session";
+const TOKEN_HEADER = "X-Prompt-Warehouse-Token";
+
+// The server refuses a delete that does not carry a session token in a custom
+// header. A page from another site cannot set that header — browsers require a
+// pre-flight for custom headers and ComfyUI does not allow it — and cannot read
+// the token either, so the delete stays an action only this UI can trigger.
+// The token is regenerated every time ComfyUI starts, hence the single
+// refetch-and-retry in `sendDelete`.
+let sessionToken = null;
+
+async function deleteToken(refresh = false) {
+  if (sessionToken && !refresh) return sessionToken;
+  const response = await api.fetchApi(SESSION_PATH);
+  const payload = response.ok ? await response.json() : null;
+  sessionToken = String(payload?.token || "");
+  if (!sessionToken) throw new Error(t("deleteFailed"));
+  return sessionToken;
+}
+
+async function sendDelete(images) {
+  const send = (token) => api.fetchApi(DELETE_PATH, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", [TOKEN_HEADER]: token },
+    body: JSON.stringify({ images }),
+  });
+  const read = async (response) => {
+    const payload = await response.json().catch(() => null);
+    return { response, payload };
+  };
+  const first = await read(await send(await deleteToken()));
+  if (first.response.status !== 403 || first.payload?.code !== "token") return first;
+  // Stale token (ComfyUI restarted under us): fetch a fresh one, retry once.
+  sessionToken = null;
+  return read(await send(await deleteToken(true)));
+}
 
 function withCount(label, count) {
   return count > 1 ? `${label} (${count})` : label;
@@ -89,13 +126,8 @@ async function deleteLastOutput(node, button) {
   button.name = t("deleting");
   node.setDirtyCanvas(true, true);
   try {
-    const response = await api.fetchApi("/prompt-warehouse/delete-output-images", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ images }),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || t("deleteFailed"));
+    const { response, payload } = await sendDelete(images);
+    if (!response.ok) throw new Error(payload?.error || t("deleteFailed"));
     node._pwSavedImages = [];
     node.imgs = [];
     removeWidget(node, button);

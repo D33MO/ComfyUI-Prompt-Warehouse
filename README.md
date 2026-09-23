@@ -3,7 +3,7 @@
 [![English](https://img.shields.io/badge/README-English-2f81f7?style=for-the-badge)](README.md)
 [![简体中文](https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-e34c26?style=for-the-badge)](README.zh-CN.md)
 
-Current version: `v0.4.1`
+Current version: `v0.4.2`
 
 A ComfyUI custom node pack for organising, reusing and randomly drawing prompts, bundled with single-line and multiline prompt nodes and a multi-LoRA loader whose list is persisted with the workflow.
 
@@ -49,7 +49,7 @@ For a larger editing area, add **Prompt Multiline**. Its inputs, joining and out
 
 ### Save Image with Delete
 
-**Save Image with Delete** saves, names and previews images exactly like ComfyUI's built-in `Save Image`. After the node has produced its output it remembers the images it just saved and shows a "delete latest output" button; clicking it opens a confirmation prompt, and only after confirming does it delete the corresponding source files from ComfyUI's `output` directory and clear the node preview. The delete endpoint validates the path and only accepts file information for files inside the `output` directory that were returned by the node.
+**Save Image with Delete** saves, names and previews images exactly like ComfyUI's built-in `Save Image`. After the node has produced its output it remembers the images it just saved and shows a "delete latest output" button; clicking it opens a confirmation prompt, and only after confirming does it delete the corresponding source files from ComfyUI's `output` directory and clear the node preview. The delete is confined to the `output` directory by real-path comparison and only answers a request that carries the session token the UI just fetched, so an unrelated page in the same browser cannot trigger it (see [API access restriction](#api-access-restriction)).
 
 Besides the native `prompt` and `workflow` metadata, saving also writes an A1111-style `parameters` field containing the LoRAs actually used by this run as `<lora:name:strength>` tags plus a `Lora hashes` line (the first 12 characters of the LoRA file's SHA256, which is CivitAI's AutoV2 value). Uploading such an image to CivitAI therefore detects and links the LoRA resources automatically, with no manual entry. LoRA information is read straight from the execution graph, so a `Multi LoRA Loader` list is recognised correctly and the workflow needs no extra wiring.
 
@@ -109,13 +109,20 @@ When Width or Height is left empty the corresponding output is `0`, letting down
 
 The plugin exposes the following endpoints through ComfyUI's built-in HTTP server. They read and write the prompt warehouse and delete files from the `output` directory:
 
-- `GET /prompt-warehouse/prompts`, `GET /prompt-warehouse/backup`
+- `GET /prompt-warehouse/prompts`, `GET /prompt-warehouse/backup`, `GET /prompt-warehouse/session`
 - `PUT /prompt-warehouse/prompts`
 - `POST /prompt-warehouse/delete-output-images`
 
 ComfyUI's API itself has no authentication, so once it is started with `--listen` any device on the local network can reach it. These endpoints therefore **only accept requests from the local machine (loopback address)** and return `403` to every other source.
 
-> Behind a reverse proxy such as nginx the request looks local to ComfyUI, so this restriction does not apply. Restrict access to the `/prompt-warehouse/` path in the proxy layer yourself.
+A loopback check on its own does not say *who* is asking, though: a page the user happens to have open in the browser also sends its requests from the local machine. The delete endpoint therefore demands two more things:
+
+- **`Content-Type: application/json`**, otherwise `415`. JSON is not a CORS-safelisted content type, so a cross-origin page cannot send it without a pre-flight request.
+- **An `X-Prompt-Warehouse-Token` header** carrying the token returned by `GET /prompt-warehouse/session`, otherwise `403`. Browsers only allow a custom request header after a successful pre-flight, and ComfyUI's `Access-Control-Allow-Headers` is the fixed list `Content-Type, Authorization` — this header is never on it, however ComfyUI was started. The token is a second lock: it is random per start, and the `session` endpoint is the only place it is handed out and never adds CORS headers, so another origin cannot read it either. The web UI fetches the token on demand and silently re-fetches it once if ComfyUI was restarted in the meantime.
+
+Targets are confined to the output directory: every requested file is resolved with `realpath` and must stay inside the `realpath`'d output root (`commonpath`), so absolute paths, drive-relative names such as `C:file.png`, `..` segments, file names containing a path separator and symlinks pointing out of the tree are all rejected. Directories are never deleted, and a request may name at most 100 files. There is no way to address a file outside ComfyUI's `output` directory.
+
+> Behind a reverse proxy such as nginx the request looks local to ComfyUI, so the loopback restriction does not apply. Restrict access to the `/prompt-warehouse/` path in the proxy layer yourself.
 
 ## Data and backup
 

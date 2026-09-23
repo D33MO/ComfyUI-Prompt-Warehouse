@@ -3,7 +3,7 @@
 [![English](https://img.shields.io/badge/README-English-2f81f7?style=for-the-badge)](README.md)
 [![简体中文](https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-e34c26?style=for-the-badge)](README.zh-CN.md)
 
-当前版本：`v0.4.1`
+当前版本：`v0.4.2`
 
 一个用于整理、复用和随机抽取提示词的 ComfyUI 自定义节点包，同时提供单行/多行提示词节点和支持工作流持久化的多 LoRA 加载器。
 
@@ -49,7 +49,7 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 
 ### 可删除图片保存
 
-**Save Image with Delete / 可删除图片保存** 的保存、命名和预览行为与 ComfyUI 原生 `Save Image` 一致。节点完成输出后会记录本次保存的图片，并显示“删除最近输出”按钮；点击后会弹出二次确认框，确认后才会删除 ComfyUI `output` 目录中的对应源文件并清除节点预览。删除接口会校验路径，只允许操作 `output` 目录内由节点返回的文件信息。
+**Save Image with Delete / 可删除图片保存** 的保存、命名和预览行为与 ComfyUI 原生 `Save Image` 一致。节点完成输出后会记录本次保存的图片，并显示“删除最近输出”按钮；点击后会弹出二次确认框，确认后才会删除 ComfyUI `output` 目录中的对应源文件并清除节点预览。删除目标通过真实路径比较限制在 `output` 目录内，且只接受带有前端刚获取的会话令牌的请求，因此浏览器里其它无关页面无法触发删除（见 [接口安全限制](#接口安全限制)）。
 
 保存时除了原生 `prompt` 和 `workflow` 元数据，还会额外写入 A1111 格式的 `parameters` 字段，把本次执行实际使用的 LoRA 以 `<lora:名称:强度>` 形式写入，并附带 `Lora hashes`（LoRA 文件 SHA256 的前 12 位，即 CivitAI 的 AutoV2 值）。这样把图片上传到 CivitAI 时可以自动识别并关联 LoRA 资源，不需要手动逐个填写。LoRA 信息直接从执行图中读取，`Multi LoRA Loader` 的列表也能被正确识别，工作流无需额外连线。
 
@@ -109,11 +109,18 @@ Warehouse 节点输出非空提示词时，会默认在末尾补上一个英文�
 
 插件通过 ComfyUI 自带的 HTTP 服务器暴露以下接口，它们会读写提示词仓库并删除 `output` 目录中的文件：
 
-- `GET /prompt-warehouse/prompts`、`GET /prompt-warehouse/backup`
+- `GET /prompt-warehouse/prompts`、`GET /prompt-warehouse/backup`、`GET /prompt-warehouse/session`
 - `PUT /prompt-warehouse/prompts`
 - `POST /prompt-warehouse/delete-output-images`
 
 ComfyUI 的 API 本身没有鉴权，一旦用 `--listen` 启动，局域网内任何设备都能访问它。因此这些接口**只接受来自本机（回环地址）的请求**，其它来源一律返回 `403`。
+
+但"来自本机"并不等于"是用户本人"：用户浏览器里开着的任意一个网页，发出的请求同样来自本机。所以删除接口在此基础上还要求两件事：
+
+- **`Content-Type` 必须是 `application/json`**，否则返回 `415`。JSON 不属于 CORS 安全列表内的内容类型，跨源页面要发它就必须先过预检。
+- **必须带 `X-Prompt-Warehouse-Token` 请求头**，值为 `GET /prompt-warehouse/session` 返回的令牌，否则返回 `403`。浏览器只允许在预检通过后发送自定义请求头，而 ComfyUI 的 `Access-Control-Allow-Headers` 固定为 `Content-Type, Authorization`，这个头永远不在其中，无论 ComfyUI 怎么启动。令牌本身是第二道锁：每次启动随机生成，只由 `session` 接口下发，且该接口不添加任何 CORS 头，其它来源读不到。前端按需获取令牌，若期间 ComfyUI 重启过则会静默重新获取一次并重试。
+
+删除目标被限制在 output 目录内：每个请求文件都会用 `realpath` 解析，并必须仍位于 `realpath` 后的 output 根目录内（`commonpath` 比较）。因此绝对路径、`C:文件名` 这类带盘符的相对路径、`..` 片段、文件名中含路径分隔符、以及指向目录外的符号链接都会被拒绝；目录永远不会被删除，单次请求最多 100 个文件。没有任何方式能指向 ComfyUI `output` 目录之外的文件。
 
 > 如果使用 nginx 等反向代理，请求在 ComfyUI 看来来自本机，该限制不会生效。请在代理层自行限制 `/prompt-warehouse/` 路径的访问。
 

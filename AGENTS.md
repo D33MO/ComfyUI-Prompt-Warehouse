@@ -37,11 +37,13 @@ git pull --ff-only
 # 2. bump the three places above, then verify
 #    (edit __init__.py, README.md, README.zh-CN.md by hand or with the edit tool)
 
-# 3. run the self-contained test scripts (no ComfyUI install needed)
+# 3. run the test scripts. The first three are self-contained (no ComfyUI install
+#    needed, no extra packages); test_save_metadata.py drives the real node against
+#    the real ComfyUI install, so it runs on ComfyUI's own python instead.
 python tests\test_routes.py
 python tests\test_backup.py
 python tests\test_lora_meta.py
-python tests\test_save_metadata.py
+D:\ComfyUI-aki-v3\python\python.exe tests\test_save_metadata.py
 
 # 4. commit the bump on its own
 git add __init__.py README.md README.zh-CN.md
@@ -103,13 +105,34 @@ gets the pack rejected, so check them before every release:
    route that writes or deletes files must never be reachable from another machine.
 5. **No third-party Python dependencies.** The pack must install by `git clone` alone.
 6. **`data/prompts.json` stays out of Git.** Only `data/prompts.example.json` is tracked.
+7. **The delete route is not protected by the loopback check, and must not pretend to be.**
+   `POST /prompt-warehouse/delete-output-images` additionally requires
+   `Content-Type: application/json` (else `415`) and an `X-Prompt-Warehouse-Token` header
+   matching `routes.py`'s per-process `DELETE_TOKEN` (else `403` with `"code": "token"`).
+   The header is what keeps a page in the user's browser out: browsers pre-flight custom
+   headers and ComfyUI's `Access-Control-Allow-Headers` is the fixed list
+   `Content-Type, Authorization`. `GET /prompt-warehouse/session` is the only place the
+   token is handed out — **never add CORS headers to that response**, or the token stops
+   being a secret. Every requested path is resolved with `realpath` and must stay inside
+   the `realpath`'d output root (`commonpath`); keep rejecting absolute paths, drive-relative
+   names (`C:file.png`), `..` segments, separators inside `filename`, NUL bytes, directories
+   and symlinks that escape the root. `web/save_image_with_delete.js` has to keep sending
+   both the content type and the header, and must re-fetch the token once on a
+   `403`/`code: token` reply (ComfyUI may have been restarted).
 
 ## 5. Tests
 
-`tests/test_*.py` are standalone scripts: each stubs ComfyUI (`aiohttp`,
-`folder_paths`, `server`) and prints its own result. Run each with plain `python`; a
-non-zero exit code means failure. Scratch output lands in `tests/_tmp*` and `tests/_out`
-and is not part of a release.
+`tests/test_*.py` are standalone scripts: each stubs what it needs and prints its own
+result. Run each with plain `python`; a non-zero exit code means failure. Scratch output
+lands in `tests/_tmp*` and `tests/_out` and is not part of a release.
+
+- `test_routes.py`, `test_backup.py` and `test_lora_meta.py` stub ComfyUI (`aiohttp`,
+  `folder_paths`, `server`) and run on any python, with no extra packages installed.
+- `test_save_metadata.py` is the exception: it executes the real save node against the real
+  ComfyUI install at `D:\ComfyUI-aki-v3\ComfyUI` (hardcoded in the file), so it needs
+  Pillow, numpy and torch — run it with ComfyUI's own interpreter
+  (`D:\ComfyUI-aki-v3\python\python.exe`). It exits 1 with `ModuleNotFoundError` on a bare
+  python; that is the environment, not the pack.
 
 ## 6. Listing status — ComfyUI-Manager PR #3180
 
@@ -120,6 +143,13 @@ and is not part of a release.
   `Select-String -Path <upstream list> -Pattern 'Prompt.Warehouse'`
 - Outstanding review item (maintainer `ltdrdata`, 2026-09-10): the Chinese-UI complaint —
   addressed on `master` in `v0.4.1` (see §4 items 1–3).
+- Second review item (same reviewer, 2026-09-23): the delete route. The reviewer accepted
+  the loopback check but pointed out that a page in the user's own browser requests from
+  the local machine too, so loopback is not access control; they asked for the target to be
+  confined to the output directory with `realpath` + `commonpath`, and for the delete to be
+  genuinely user-initiated or moved inside node execution. Addressed on `master` in `v0.4.2`
+  (see §4 items 4 and 7). **Not yet reported back on the PR** — the comment is deliberately
+  still pending.
 - Because the fixes live in *this* repository, the maintainer receives **no notification**.
   A release does not advance the PR. After a fix like this, post a comment on PR #3180
   pinging `@ltdrdata` with the changed files and the tag it landed in.
