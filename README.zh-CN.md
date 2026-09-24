@@ -25,7 +25,7 @@
 - 每个 LoRA 可独立启停，以紧凑单行界面调整统一强度
 - LoRA 列表及 `Add LoRA` 按钮在工作流重载或重启 ComfyUI 后会自动恢复
 - 提供 `Save Image with Delete / 可删除图片保存`，保存预览后可删除 output 中的对应源文件
-- 保存的 PNG 会附带 CivitAI 可识别的 LoRA 元数据，上传后自动关联 LoRA 资源
+- 保存的 PNG 会附带 CivitAI 可识别的 checkpoint 与 LoRA 哈希，上传后自动关联对应资源，且不会写入提示词内容与 LoRA 强度
 - 默认英文界面；将 ComfyUI 的 `Comfy → Locale` 设置为简体中文后界面一并切换；不会根据浏览器语言自动切换
 
 ## 安装
@@ -51,11 +51,11 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 
 **Save Image with Delete / 可删除图片保存** 的保存、命名和预览行为与 ComfyUI 原生 `Save Image` 一致。节点完成输出后会记录本次保存的图片，并显示“删除最近输出”按钮；点击后会弹出二次确认框，确认后才会删除 ComfyUI `output` 目录中的对应源文件并清除节点预览。删除目标通过真实路径比较限制在 `output` 目录内，且只接受带有前端刚获取的会话令牌的请求，因此浏览器里其它无关页面无法触发删除（见 [接口安全限制](#接口安全限制)）。
 
-保存时除了原生 `prompt` 和 `workflow` 元数据，还会额外写入 A1111 格式的 `parameters` 字段，把本次执行实际使用的 LoRA 以 `<lora:名称:强度>` 形式写入，并附带 `Lora hashes`（LoRA 文件 SHA256 的前 12 位，即 CivitAI 的 AutoV2 值）。这样把图片上传到 CivitAI 时可以自动识别并关联 LoRA 资源，不需要手动逐个填写。LoRA 信息直接从执行图中读取，`Multi LoRA Loader` 的列表也能被正确识别，工作流无需额外连线。
+保存时除了原生 `prompt` 和 `workflow` 元数据，还会额外写入 A1111 格式的 `parameters` 字段，用哈希标出这张图背后的资源：checkpoint 写入 `Model hash` / `Model`，本次执行实际使用的 LoRA 写入 `Lora hashes` 映射，后面跟上采样参数。哈希取文件 SHA256 的前 10 位，也就是 CivitAI 的 AutoV2 值——这正是 CivitAI 匹配上传图片时使用的那一种哈希，所以上传后 checkpoint 和 LoRA 都会自动识别并联上对应资源，不需要手动逐个填写。资源信息直接从执行图中读取，`Multi LoRA Loader` 的列表也能被正确识别，工作流无需额外连线。
 
-`parameters` 字段只包含 LoRA 信息和采样参数，**不会写入正向或负向提示词**，因此上传的图片不会暴露你的提示词内容。图中没有任何 LoRA 时不会写入该字段。
+该字段**不写入正向/负向提示词，也不写入 `<lora:名称:强度>` 标签**：提示词内容不会暴露，每个 LoRA 用了多大强度也不会被记录。也就是说上传的图片只说明「用了哪些资源」，不说明「怎么写的提示词、LoRA 调了多重」。图中既没有 checkpoint 也没有 LoRA 时才会不写该字段。
 
-哈希结果按文件路径、大小和修改时间缓存在 `data/lora_hashes.json`，同一个 LoRA 只会计算一次；节点异常时会自动退回原生保存行为，不影响出图。
+哈希结果按文件路径、大小和修改时间缓存在 `data/lora_hashes.json`，同一个模型只会计算一次；节点异常时会自动退回原生保存行为，不影响出图。
 
 ### 多 LoRA 加载器
 

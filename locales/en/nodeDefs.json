@@ -29,7 +29,7 @@
   },
   "PromptWarehouseSaveImageWithDelete": {
     "display_name": "Save Image with Delete",
-    "description": "Save and preview images, then optionally delete the corresponding source files from output.",
+    "description": "Save and preview images with CivitAI-readable checkpoint and LoRA hashes, then optionally delete the corresponding source files from output.",
     "inputs": { "images": { "name": "Images" }, "filename_prefix": { "name": "Filename prefix" } }
   }
 }

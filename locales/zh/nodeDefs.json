@@ -29,7 +29,7 @@
   },
   "PromptWarehouseSaveImageWithDelete": {
     "display_name": "可删除图片保存",
-    "description": "保存并预览图片，之后可手动删除 output 目录中的对应源文件。",
+    "description": "保存并预览图片，附带 CivitAI 可识别的 checkpoint 与 LoRA 哈希，之后可手动删除 output 目录中的对应源文件。",
     "inputs": { "images": { "name": "图片" }, "filename_prefix": { "name": "文件名前缀" } }
   }
 }

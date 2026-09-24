@@ -25,7 +25,7 @@ A ComfyUI custom node pack for organising, reusing and randomly drawing prompts,
 - Each LoRA can be toggled on or off independently, with a shared strength on a compact single row
 - The LoRA list and its `Add LoRA` button survive a workflow reload or a ComfyUI restart
 - Ships a **Save Image with Delete** node that can delete the saved source file from `output`
-- Saved PNGs carry CivitAI-readable LoRA metadata, so uploads link back to the LoRA resources automatically
+- Saved PNGs carry CivitAI-readable checkpoint and LoRA hashes, so uploads link back to those resources automatically, without writing your prompt text or the LoRA strengths
 - The interface is English by default; setting ComfyUI's `Comfy → Locale` to 简体中文 switches the node UI too. It does not follow the browser language.
 
 ## Installation
@@ -51,11 +51,11 @@ For a larger editing area, add **Prompt Multiline**. Its inputs, joining and out
 
 **Save Image with Delete** saves, names and previews images exactly like ComfyUI's built-in `Save Image`. After the node has produced its output it remembers the images it just saved and shows a "delete latest output" button; clicking it opens a confirmation prompt, and only after confirming does it delete the corresponding source files from ComfyUI's `output` directory and clear the node preview. The delete is confined to the `output` directory by real-path comparison and only answers a request that carries the session token the UI just fetched, so an unrelated page in the same browser cannot trigger it (see [API access restriction](#api-access-restriction)).
 
-Besides the native `prompt` and `workflow` metadata, saving also writes an A1111-style `parameters` field containing the LoRAs actually used by this run as `<lora:name:strength>` tags plus a `Lora hashes` line (the first 12 characters of the LoRA file's SHA256, which is CivitAI's AutoV2 value). Uploading such an image to CivitAI therefore detects and links the LoRA resources automatically, with no manual entry. LoRA information is read straight from the execution graph, so a `Multi LoRA Loader` list is recognised correctly and the workflow needs no extra wiring.
+Besides the native `prompt` and `workflow` metadata, saving also writes an A1111-style `parameters` field that names the resources behind the image by hash: the checkpoint as `Model hash` / `Model`, the LoRAs actually used by this run as a `Lora hashes` map, followed by the sampler settings. Each hash is the first 10 characters of the file's SHA256 — CivitAI's AutoV2 value, which is exactly the hash it matches an upload against, so both the checkpoint and the LoRAs are detected and linked automatically with no manual entry. Resource information is read straight from the execution graph, so a `Multi LoRA Loader` list is recognised correctly and the workflow needs no extra wiring.
 
-That `parameters` field carries only LoRA information and sampler settings — the positive and negative prompts are **never written to it**, so an uploaded image does not expose your prompt text. The field is omitted entirely when the graph contains no LoRA.
+That field carries **no prompt text and no `<lora:name:strength>` tags**: your positive and negative prompts are not exposed, and the strength each LoRA was applied with is not recorded either. An upload therefore says which resources produced the image, but not how it was prompted or weighted. The field is only omitted when the graph references neither a checkpoint nor a LoRA.
 
-Hashes are cached in `data/lora_hashes.json` keyed by file path, size and modification time, so each LoRA is hashed only once. If the node fails for any reason it falls back to the native save behaviour, so image generation is never blocked.
+Hashes are cached in `data/lora_hashes.json` keyed by file path, size and modification time, so each model is hashed only once. If the node fails for any reason it falls back to the native save behaviour, so image generation is never blocked.
 
 ### Multi LoRA Loader
 
