@@ -8,3 +8,4 @@ tests/_tmp/
 tests/_tmp_routes/
 tests/_tmp_lora_meta/
 .workbuddy/
+test_*.py
