@@ -59,6 +59,10 @@ Hashes are cached in `data/lora_hashes.json` keyed by file path, size and modifi
 
 ### Multi LoRA Loader
 
+Click **LoRA Presets** to save the current combination with a title, then load it into any Multi LoRA Loader in another workflow. Only enabled LoRAs are captured; presets preserve their file names, order and strengths. The detail table lets you select each LoRA model from a dropdown and enter its strength as a number. Use **Add LoRA** beside **Use current node combination** to add a row; click its rightmost **×** to remove it without confirmation. Edits stay in the draft until saved; empty or invalid strengths block saving and loading. Select a preset to rename or delete it; **Use current node combination** replaces its draft rows with the node's current list before saving. The editor badge shows **Draft**, **Saved** or **Unsaved**; changes become saved only after the save request succeeds. Presets have no groups and are searched by title. Successful loading replaces the node's list and closes the dialog; loading is blocked when an enabled, nonzero-strength LoRA is missing. These presets store references, not model files.
+
+Presets live in `data/lora_presets.json` (ignored by Git), with a mirror in the same Documents backup folder as prompts. A missing or corrupt preset file is restored from that mirror; an intentionally empty list stays empty. Preset writes use the local session token. Restart ComfyUI and refresh the browser after installing this feature.
+
 Add **Multi LoRA Loader** from the `Prompt Warehouse` category, connect the base model's `MODEL` and `CLIP`, then click `＋ Add LoRA` at the bottom of the node to add any number of LoRAs. Each LoRA takes a single row: click the dot on the left to enable or disable it, click the name to pick a file, and use `− / +` or click the number to adjust strength; right-click a row to toggle, move up, move down or delete it. LoRAs are applied from top to bottom, and one strength applies to both MODEL and CLIP.
 
 The compact single-row UI and the main interactions are modelled on and inspired by [Power Lora Loader from rgthree-comfy](https://github.com/rgthree/rgthree-comfy). This project is an independent implementation built on that idea, with these differences:
@@ -112,6 +116,7 @@ The plugin exposes the following endpoints through ComfyUI's built-in HTTP serve
 - `GET /prompt-warehouse/prompts`, `GET /prompt-warehouse/backup`, `GET /prompt-warehouse/session`
 - `PUT /prompt-warehouse/prompts`
 - `POST /prompt-warehouse/delete-output-images`
+- `GET /prompt-warehouse/lora-presets`, `POST /prompt-warehouse/lora-presets` (preset writes require JSON and the session token)
 
 ComfyUI's API itself has no authentication, so once it is started with `--listen` any device on the local network can reach it. These endpoints therefore **only accept requests from the local machine (loopback address)** and return `403` to every other source.
 

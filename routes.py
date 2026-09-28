@@ -8,6 +8,7 @@ import folder_paths
 from server import PromptServer
 
 from .prompt_store import backup_status, load_entries, save_entries
+from .lora_presets import load_presets, update_presets
 
 routes = PromptServer.instance.routes
 
@@ -99,6 +100,30 @@ async def get_session(request):
     if denied:
         return denied
     return web.json_response({"token": DELETE_TOKEN})
+
+
+@routes.get("/prompt-warehouse/lora-presets")
+async def get_lora_presets(request):
+    denied = _remote_only(request)
+    if denied is not None:
+        return denied
+    return web.json_response({"entries": load_presets(),
+                              "lora_names": folder_paths.get_filename_list("loras")})
+
+
+@routes.post("/prompt-warehouse/lora-presets")
+async def post_lora_presets(request):
+    denied = _remote_only(request)
+    if denied is not None:
+        return denied
+    if (request.headers.get("Content-Type") or "").split(";")[0].strip().lower() != "application/json":
+        return web.json_response({"error": NOT_JSON_ERROR}, status=415)
+    if not secrets.compare_digest(request.headers.get(TOKEN_HEADER) or "", DELETE_TOKEN):
+        return web.json_response({"error": TOKEN_ERROR, "code": "token"}, status=403)
+    try:
+        return web.json_response({"entries": update_presets(await request.json())})
+    except (ValueError, TypeError) as exc:
+        return web.json_response({"error": str(exc)}, status=400)
 
 
 def _has_drive(value):

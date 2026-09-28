@@ -1,5 +1,6 @@
 import { app } from "../../scripts/app.js";
 import { t } from "./i18n.js";
+import { openLoraPresets } from "./lora_presets.js";
 
 const NODE_NAME = "PromptWarehouseMultiLoraLoader";
 const ROW_HEIGHT = 23;
@@ -242,6 +243,31 @@ function renderEditor(node, names) {
   });
   button.options = { ...(button.options || {}), serialize: false };
   added.push(button);
+  const divider = {
+    name: "lora_presets_divider",
+    type: "pw-lora-divider",
+    options: { serialize: false },
+    computeSize(width) { return [width, 10]; },
+    draw(ctx, _node, width, y) {
+      ctx.save();
+      ctx.strokeStyle = LiteGraph.WIDGET_OUTLINE_COLOR || "#555";
+      ctx.beginPath();
+      ctx.moveTo(14, y + 5);
+      ctx.lineTo(width - 14, y + 5);
+      ctx.stroke();
+      ctx.restore();
+    },
+  };
+  node.addCustomWidget(divider);
+  added.push(divider);
+  const presets = node.addWidget("button", t("loraPresets"), null, () => {
+    openLoraPresets(node, () => parseConfig(configWidget), (presetRows) => {
+      configWidget.value = JSON.stringify(presetRows);
+      renderEditor(node, names);
+    });
+  });
+  presets.options = { ...(presets.options || {}), serialize: false };
+  added.push(presets);
   node.setSize([Math.max(node.size[0], 355), Math.max(node.computeSize()[1], 105)]);
   save();
 }

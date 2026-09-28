@@ -8,6 +8,16 @@ import { app } from "../../scripts/app.js";
 // language is the single, explicit, per-user opt-in.
 const STRINGS = {
   en: {
+    loraPresets: "LoRA Presets", newPreset: "＋ New from current combination", searchPresets: "Search title",
+    newLoraPreset: "New combination", editLoraPreset: "Edit combination",
+    presetHint: "Edit LoRA models and strengths here, then save the combination for any workflow. Loading replaces this node's LoRA list.",
+    captureLoras: "Use current node combination", missingLora: "Missing file",
+    missingLoraHint: "Restore the missing enabled LoRA files before loading this combination.", ungrouped: "Ungrouped",
+    presetSelected: "Combination selected. Load it into the node, or edit its title.", noPresets: "No saved combinations match. Save the current node combination to begin.",
+    presetDraft: "Unsaved combination. Click Save to keep it as a preset.", presetLoaded: "Combination loaded into the node.",
+    presetTitleRequired: "Enter a title for this combination.", presetSaved: "Combination saved.", presetDeleted: "Combination deleted.",
+    deletePresetQuestion: "Delete the saved combination “{title}”?", presetFailed: "Unable to access LoRA presets: {error}",
+    presetNodeRemoved: "The original node has been removed. Open presets from another Multi LoRA Loader.",
     addLora: "＋ Add LoRA", cancel: "Cancel", confirm: "Confirm", invalidNumber: "Enter a valid number.", strength: "LoRA Strength",
     selectLora: "Select LoRA", noLora: "No LoRA files found", toggleOff: "Toggle Off", toggleOn: "Toggle On", moveUp: "Move Up", moveDown: "Move Down", remove: "Remove",
     deleteRecent: "Delete Recent Output", deleteTitle: "Permanently delete?", deleteOneTarget: "the most recent image",
@@ -23,6 +33,16 @@ const STRINGS = {
     deletePromptQuestion: "Delete “{title}”?", promptDeleted: "Prompt deleted.",
   },
   zh: {
+    loraPresets: "LoRA 搭配预设", newPreset: "＋ 新增当前搭配", searchPresets: "搜索名称",
+    newLoraPreset: "新增搭配", editLoraPreset: "编辑搭配",
+    presetHint: "可直接选择 LoRA 模型、输入强度，再保存搭配供其他工作流复用。加载会替换当前节点的 LoRA 列表。",
+    captureLoras: "读取当前节点搭配", missingLora: "文件缺失",
+    missingLoraHint: "请先补齐已启用的 LoRA 文件，再加载这组搭配。", ungrouped: "未分组",
+    presetSelected: "已选中搭配。可以加载到节点，或修改名称。", noPresets: "暂无匹配的搭配。可以先保存当前节点的搭配。",
+    presetDraft: "搭配尚未保存，点击保存将其存为预设。", presetLoaded: "搭配已加载到节点。",
+    presetTitleRequired: "请为这组搭配填写名称。", presetSaved: "搭配已保存。", presetDeleted: "搭配已删除。",
+    deletePresetQuestion: "删除已保存的搭配“{title}”？", presetFailed: "无法访问 LoRA 搭配预设：{error}",
+    presetNodeRemoved: "原节点已被移除，请从其他多 LoRA 加载器打开预设。",
     addLora: "＋ 添加 LoRA", cancel: "取消", confirm: "确定", invalidNumber: "请输入有效数字。", strength: "LoRA 强度",
     selectLora: "选择 LoRA", noLora: "未找到 LoRA 文件", toggleOff: "关闭", toggleOn: "启用", moveUp: "上移", moveDown: "下移", remove: "删除",
     deleteRecent: "删除最近输出", deleteTitle: "确认永久删除？", deleteOneTarget: "最近输出的图片",

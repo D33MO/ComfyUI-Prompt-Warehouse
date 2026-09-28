@@ -59,6 +59,10 @@ git clone https://github.com/D33MO/ComfyUI-Prompt-Warehouse.git
 
 ### 多 LoRA 加载器
 
+点击 **LoRA 搭配预设**，为当前搭配填写名称并保存，之后可在其他工作流的任意多 LoRA 加载器中复用。只读取已启用的 LoRA，预设保留其文件名、顺序和权重；详情中的模型可通过下拉框选择，强度可直接输入数字。“读取当前节点搭配”右侧的“添加 LoRA”可新增一行，行末的“×”可直接移除，无需确认。修改先保留在草稿中，保存后生效；强度为空或无效时不能保存或加载。点击“新增当前搭配”开始草稿，点击“保存”后才写入预设。选中已有搭配后可改名或删除；点击“读取当前节点搭配”会用节点当前列表替换草稿，再保存即可更新该预设。编辑区显示“草稿／已保存／未保存”标识，只有保存成功后才显示已保存。搭配不分组，按名称搜索。加载成功会替换节点列表并关闭弹窗；已启用且权重不为零的 LoRA 文件缺失时会阻止加载。预设仅保存配置，不复制模型文件。
+
+搭配保存在不受 Git 管理的 `data/lora_presets.json`，并镜像备份到与提示词相同的文档备份目录。主文件丢失或损坏时从镜像恢复，主动清空的列表保持为空。预设写入接口使用本地会话令牌。安装此功能后需重启 ComfyUI 并刷新浏览器。
+
 在 `Prompt Warehouse` 分类中添加 **Multi LoRA Loader / 多 LoRA 加载器**，连接基础模型的 `MODEL` 和 `CLIP`，再点击节点底部的 `＋ Add LoRA` 添加任意数量的 LoRA。每个 LoRA 只占一行：点击左侧圆点启停，点击名称选择文件，使用 `− / +` 或点击数值调整强度；右键该行可以启停、上移、下移或删除。LoRA 会从上到下依次应用，同一强度同时作用于 MODEL 和 CLIP。
 
 该节点的简洁单行界面和主要交互模仿并参考了 [rgthree-comfy 的 Power Lora Loader](https://github.com/rgthree/rgthree-comfy)。在此基础上，本项目采用了独立实现，并做了以下调整：
@@ -112,6 +116,7 @@ Warehouse 节点输出非空提示词时，会默认在末尾补上一个英文�
 - `GET /prompt-warehouse/prompts`、`GET /prompt-warehouse/backup`、`GET /prompt-warehouse/session`
 - `PUT /prompt-warehouse/prompts`
 - `POST /prompt-warehouse/delete-output-images`
+- `GET /prompt-warehouse/lora-presets`、`POST /prompt-warehouse/lora-presets`（写入搭配需 JSON 内容类型和会话令牌）
 
 ComfyUI 的 API 本身没有鉴权，一旦用 `--listen` 启动，局域网内任何设备都能访问它。因此这些接口**只接受来自本机（回环地址）的请求**，其它来源一律返回 `403`。
 

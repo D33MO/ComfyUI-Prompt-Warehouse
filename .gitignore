@@ -3,6 +3,7 @@ __pycache__/
 .DS_Store
 data/prompts.json
 data/lora_hashes.json
+data/lora_presets.json
 tests/_out/
 tests/_tmp/
 tests/_tmp_routes/
