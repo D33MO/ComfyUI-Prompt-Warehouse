@@ -2,6 +2,8 @@ import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
 import { ALL_GROUPS, groupChoice, groupLabel, t } from "./i18n.js";
 
+import { attachPromptWeightControls } from "./prompt_weight.js";
+
 const NODE_NAME = "PromptWarehouse";
 const EMPTY_DRAFT = () => ({
   id: null,
@@ -288,6 +290,7 @@ app.registerExtension({
     const created = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function () {
       const result = created?.apply(this, arguments);
+      attachPromptWeightControls(this, widget(this, "prompt"));
       const groupWidget = this.widgets?.find((item) => item.name === "random_group");
       if (groupWidget?.options) {
         // ComfyUI translates node input *names* from locales/*/nodeDefs.json, but it
