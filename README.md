@@ -80,8 +80,9 @@ The compact single-row UI and the main interactions are modelled on and inspired
 4. The entry is written to the warehouse only after you click "save".
 5. Clicking an entry on the left shows its contents on the right, where you can read or edit it; edits take effect only after you click "save" again.
 6. The content shown on the right is loaded into the current node only when you select an entry and click "load".
-7. While editing an existing entry you can click "＋ new" on the left at any time to clear the right-hand side and start a new entry; drafts and modified content are flagged with a prominent unsaved state.
-8. Clicking "delete" while editing an entry and confirming removes it from the warehouse immediately, with no second save needed.
+7. Click "Use Current Content" to copy this node's prompt and dimensions into the editor. A specific selected group is copied too; "All" leaves the editor's group unchanged. The title stays in place, and the copied content remains unsaved until you click "save".
+8. While editing an existing entry you can click "＋ new" on the left at any time to clear the right-hand side and start a new entry; drafts and modified content are flagged with a prominent unsaved state.
+9. Clicking "delete" while editing an entry and confirming removes it from the warehouse immediately, with no second save needed.
 
 ### Random draw
 
