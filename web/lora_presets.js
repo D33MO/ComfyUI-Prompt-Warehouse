@@ -3,7 +3,6 @@ import { t } from "./i18n.js";
 
 const endpoint = "/prompt-warehouse/lora-presets";
 const copy = (rows) => JSON.parse(JSON.stringify(rows));
-const enabledRows = (rows) => copy(rows.filter((row) => row.enabled ?? true));
 
 async function request(payload) {
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -34,7 +33,8 @@ export async function openLoraPresets(node, readRows, applyRows) {
       .pw-presets header,.pw-presets footer{display:flex;align-items:center;justify-content:space-between;gap:10px}.pw-presets h2{font-size:18px;margin:0}.pw-presets p{color:#9aa8ba;line-height:1.5}
       .pw-presets-heading{display:flex;align-items:center;gap:10px}.pw-presets [data-mode]{padding:3px 7px;border-radius:99px;background:#263448;color:#a9c6e8;font-size:11px}.pw-presets [data-mode].unsaved{background:#743b20;color:#ffd09e;box-shadow:0 0 0 1px #b76836}
       .pw-presets button,.pw-presets input,.pw-presets select{font:inherit;border:1px solid #3a4555;border-radius:6px;padding:8px 10px;background:#222b37;color:#edf3fa}.pw-presets button{cursor:pointer}.pw-presets button:disabled{opacity:.45;cursor:default}.pw-presets :focus-visible{outline:2px solid #7aa2d8;outline-offset:2px}
-      .pw-presets table{table-layout:fixed}.pw-presets th:nth-child(2){width:110px}.pw-presets th:last-child{width:38px}.pw-presets td select,.pw-presets td input{width:100%;min-width:0;background:#0f141b}.pw-presets input[aria-invalid=true]{border-color:#ef9b8e}.pw-presets [data-remove-lora]{padding:4px 7px;background:transparent;border-color:transparent;color:#ffb8b2;font-size:20px;line-height:1}.pw-presets [data-remove-lora]:hover{background:#743b2033}
+      .pw-presets table{table-layout:fixed}.pw-presets th:nth-child(2){width:110px}.pw-presets th:nth-child(3){width:70px}.pw-presets th:last-child{width:38px}.pw-presets td select,.pw-presets td input{width:100%;min-width:0;background:#0f141b}.pw-presets input[aria-invalid=true]{border-color:#ef9b8e}.pw-presets [data-remove-lora]{padding:4px 7px;background:transparent;border-color:transparent;color:#ffb8b2;font-size:20px;line-height:1}.pw-presets [data-remove-lora]:hover{background:#743b2033}
+      .pw-presets td input[type=checkbox]{width:auto;accent-color:#7aa2d8}
       .pw-presets-row-actions{display:flex;flex-wrap:wrap;gap:8px}
       .pw-presets-layout{display:grid;grid-template-columns:240px 1fr;gap:20px;margin:16px 0}.pw-presets aside{border-right:1px solid #343d4c;padding-right:18px}.pw-presets aside input{width:100%;margin:8px 0;background:#0f141b}.pw-presets-list{max-height:360px;overflow:auto}.pw-presets-list button{display:block;width:100%;text-align:left;margin:4px 0;background:transparent}.pw-presets-list button[aria-pressed=true]{background:#263448;border-color:#7aa2d8}.pw-presets small{display:block;color:#9aa8ba;margin-top:4px}
       .pw-presets label{display:block;color:#9aa8ba;margin-bottom:12px}.pw-presets label input{display:block;width:100%;margin-top:5px;background:#0f141b}.pw-presets table{width:100%;border-collapse:collapse;margin:10px 0 18px}.pw-presets td,.pw-presets th{text-align:left;padding:8px 5px;border-bottom:1px solid #303846}.pw-presets th{color:#9aa8ba;font-weight:400}.pw-presets td:first-child{overflow-wrap:anywhere}.pw-presets td:nth-child(2){font-family:monospace}.pw-presets tr[data-disabled]{opacity:.5}.pw-presets .pw-missing{color:#ef9b8e}.pw-presets footer div{display:flex;gap:8px}.pw-presets [data-save]{background:#4778ad}.pw-presets [data-status]{min-height:20px}.pw-presets [data-delete]{color:#ffb8b2}
@@ -60,7 +60,7 @@ export async function openLoraPresets(node, readRows, applyRows) {
   const q = (name) => root.querySelector(`[data-${name}]`);
   let entries = data.entries;
   let id = null;
-  let rows = enabledRows(readRows());
+  let rows = copy(readRows());
   let busy = false;
   let savedDraft = null;
   const draftSignature = () => JSON.stringify({ title: q("title").value.trim(), loras: rows });
@@ -71,7 +71,7 @@ export async function openLoraPresets(node, readRows, applyRows) {
     q("mode").classList.toggle("unsaved", changed);
   }
   const available = new Set(data.lora_names);
-  const missing = () => rows.filter((row) => Number(row.strength) !== 0 && !available.has(row.name));
+  const missing = () => rows.filter((row) => (row.enabled ?? true) && Number(row.strength) !== 0 && !available.has(row.name));
   const invalidStrength = () => rows.some((row) => typeof row.strength !== "number" || !Number.isFinite(row.strength));
   const status = (message) => { q("status").textContent = message; };
   function controls() {
@@ -89,7 +89,7 @@ export async function openLoraPresets(node, readRows, applyRows) {
   function renderRows() {
     const table = document.createElement("table");
     const head = table.createTHead().insertRow();
-    for (const label of [t("selectLora"), t("strength")]) {
+    for (const label of [t("selectLora"), t("strength"), t("enabled")]) {
       const th = document.createElement("th"); th.textContent = label; head.append(th);
     }
     const actionHeader = document.createElement("th");
@@ -98,6 +98,7 @@ export async function openLoraPresets(node, readRows, applyRows) {
     const body = table.createTBody();
     for (const row of rows) {
       const tr = body.insertRow();
+      tr.toggleAttribute("data-disabled", !(row.enabled ?? true));
       const absent = !available.has(row.name);
       const select = document.createElement("select");
       select.setAttribute("aria-label", `${t("selectLora")} ${body.rows.length}`);
@@ -130,6 +131,17 @@ export async function openLoraPresets(node, readRows, applyRows) {
         controls();
       };
       tr.insertCell().append(input);
+      const enabled = document.createElement("input");
+      enabled.type = "checkbox";
+      enabled.checked = row.enabled ?? true;
+      enabled.setAttribute("aria-label", `${t("enabled")} ${body.rows.length}`);
+      enabled.onchange = () => {
+        row.enabled = enabled.checked;
+        tr.toggleAttribute("data-disabled", !row.enabled);
+        status(t(missing().length ? "missingLoraHint" : "presetDraft"));
+        controls();
+      };
+      tr.insertCell().append(enabled);
       const remove = document.createElement("button");
       remove.textContent = "×";
       remove.dataset.removeLora = "";
@@ -158,10 +170,10 @@ export async function openLoraPresets(node, readRows, applyRows) {
       button.textContent = entry.title;
       button.setAttribute("aria-pressed", String(entry.id === id));
       const detail = document.createElement("small");
-      detail.textContent = `${entry.loras.filter((row) => row.enabled ?? true).length} LoRA`;
+      detail.textContent = `${entry.loras.length} LoRA`;
       button.append(detail);
       button.onclick = () => {
-        id = entry.id; rows = enabledRows(entry.loras);
+        id = entry.id; rows = copy(entry.loras);
         q("title").value = entry.title;
         savedDraft = draftSignature();
         status(t("presetSelected")); renderRows(); renderList();
@@ -185,10 +197,10 @@ export async function openLoraPresets(node, readRows, applyRows) {
     }
   };
   q("new").onclick = () => {
-    id = null; savedDraft = null; rows = enabledRows(readRows()); q("title").value = "";
+    id = null; savedDraft = null; rows = copy(readRows()); q("title").value = "";
     status(t("presetDraft")); renderRows(); renderList(); q("title").focus();
   };
-  q("capture").onclick = () => { rows = enabledRows(readRows()); status(t("presetDraft")); renderRows(); };
+  q("capture").onclick = () => { rows = copy(readRows()); status(t("presetDraft")); renderRows(); };
   q("add-lora").onclick = () => {
     if (busy || !available.size) return;
     rows.push({ name: available.values().next().value, strength: 1, enabled: true });

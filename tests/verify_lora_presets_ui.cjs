@@ -56,9 +56,10 @@ const server = http.createServer(async (req, res) => {
     await page.locator('[data-save]').click();
     await page.getByText('Combination saved.', { exact: true }).waitFor();
     assert.equal(await page.locator('[data-mode]').textContent(), 'Saved');
-    assert.deepEqual(entries.find(e => e.title === 'Style + detail').loras, current.filter(row => row.enabled));
-    assert.equal(await page.locator('[data-rows] th').count(), 3);
-    assert.equal(await page.locator('[data-rows] tbody tr').count(), 1);
+    assert.deepEqual(entries.find(e => e.title === 'Style + detail').loras, current);
+    assert.equal(await page.locator('[data-rows] th').count(), 4);
+    assert.equal(await page.locator('[data-rows] tbody tr').count(), 2);
+    assert.equal(await page.locator('[data-rows] input[type=checkbox]').nth(1).isChecked(), false);
     assert.deepEqual(await page.evaluate(() => {
       const index = window.node.widgets.findIndex(w => w.type === 'pw-lora-divider');
       return [window.node.widgets[index - 1].name, window.node.widgets[index + 1].name,
@@ -91,10 +92,10 @@ const server = http.createServer(async (req, res) => {
     assert.equal(await page.locator('[data-mode]').textContent(), 'Saved');
     await page.locator('[data-add-lora]').click();
     assert.equal(await page.locator('[data-rows] tbody tr').count(), 2);
-    assert.equal(await page.locator('[data-rows] input').last().inputValue(), '1');
+    assert.equal(await page.locator('[data-rows] input[type=number]').last().inputValue(), '1');
     assert.equal(await page.locator('[data-mode]').textContent(), 'Unsaved');
     await page.locator('[data-rows] select').last().selectOption('detail.safetensors');
-    await page.locator('[data-rows] input').last().fill('0.5');
+    await page.locator('[data-rows] input[type=number]').last().fill('0.5');
     await page.locator('[data-save]').click();
     await page.getByText('Combination saved.', { exact: true }).waitFor();
     assert.deepEqual(entries.find(e => e.id === 'missing').loras[1], {name:'detail.safetensors',strength:0.5,enabled:true});
@@ -114,7 +115,7 @@ const server = http.createServer(async (req, res) => {
     await page.getByRole('button', { name: /Style \+ detail/ }).click();
     await page.locator('[data-load]').click();
     assert.equal(await page.locator('.pw-presets').count(), 0);
-    assert.deepEqual(await page.evaluate(() => JSON.parse(window.node.widgets[0].value)), current.filter(row => row.enabled));
+    assert.deepEqual(await page.evaluate(() => JSON.parse(window.node.widgets[0].value)), current);
     assert.equal(await page.evaluate(() => window.node.widgets.filter(w => w.name === 'LoRA Presets').length), 1);
     await page.evaluate(() => window.open());
     await page.getByRole('button', { name: /Style \+ detail/ }).click();
@@ -126,7 +127,12 @@ const server = http.createServer(async (req, res) => {
       {name:'style.safetensors',strength:0.8,enabled:true},
       {name:'disabled-missing.safetensors',strength:1,enabled:false}]); });
     await page.locator('[data-capture]').click();
-    assert.equal(await page.locator('[data-rows] tbody tr').count(), 1);
+    assert.equal(await page.locator('[data-rows] tbody tr').count(), 2);
+    const disabledMissing = page.locator('[data-rows] input[type=checkbox]').nth(1);
+    assert.equal(await disabledMissing.isChecked(), false);
+    await disabledMissing.check();
+    assert.equal(await page.locator('[data-load]').isDisabled(), true);
+    await disabledMissing.uncheck();
     assert.equal(await page.locator('[data-load]').isEnabled(), true);
     assert.equal(await page.locator('[data-mode]').textContent(), 'Unsaved');
     await page.locator('[data-title]').fill('Renamed');
@@ -147,10 +153,11 @@ const server = http.createServer(async (req, res) => {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.evaluate(() => { window.node.widgets[0].value = JSON.stringify([{name:'style.safetensors',strength:1,enabled:false}]); });
     await page.locator('[data-new]').click();
-    assert.equal(await page.locator('[data-rows] tbody tr').count(), 0);
-    assert.equal(await page.locator('[data-save]').isDisabled(), true);
-    await page.locator('[data-add-lora]').click();
     assert.equal(await page.locator('[data-rows] tbody tr').count(), 1);
+    assert.equal(await page.locator('[data-rows] input[type=checkbox]').first().isChecked(), false);
+    assert.equal(await page.locator('[data-save]').isEnabled(), true);
+    await page.locator('[data-add-lora]').click();
+    assert.equal(await page.locator('[data-rows] tbody tr').count(), 2);
     assert.equal(await page.locator('[data-save]').isEnabled(), true);
     await page.setViewportSize({ width: 420, height: 760 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
